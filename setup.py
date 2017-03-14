@@ -14,5 +14,6 @@ setup(name="MICe-lab",
         'pydpiper',
         'typing',
       ],
+      packages=['python', 'python.saddle_recon'],
       scripts=['python/saddle_recon/saddle_recon.py'],
       )
