@@ -1,0 +1,89 @@
+
+COMPONENT_INDICES = config['file_numbers'].split(',') if 'file_numbers' in config else [str(x) for x in [1, 2, 3, 4]]
+
+COMPONENTS = dict(zip(COMPONENT_INDICES, ["-40%,0 -40%,0 0,0", "-40%,0 0,-40% 0,0", "0,-40% 0,-40% 0,0", "0,-40% -40%,0 0,0"]))
+
+#COMPONENT_INDICES = COMPONENTS.keys()
+
+
+FILES, = glob_wildcards(os.path.join(config['input_dir'], '{file}.mnc'))
+
+rule all:
+  input:
+    expand("out/{file}_component_{n}.mnc",  file=FILES, n=COMPONENT_INDICES),
+    expand("out/{file}_component_{n}.tiff", file=FILES, n=COMPONENT_INDICES)
+  #shell:
+  #  "su <...> -c 'chown out/{file}_component_{n}.{{mnc,tiff}}'"
+
+rule downsample_input:
+  input:
+    expand("{input_dir}/{{input}}.mnc", input_dir=config['input_dir'])
+  output:
+    temp("tmp/{input}_ds.mnc")
+  shell:
+    "autocrop -isostep 0.1 {input} {output}"
+
+rule compute_bimodalT:
+  input:
+    temp("tmp/{input}_ds.mnc")
+  output:
+    temp("tmp/{input}_ds_bimodal_thres.txt")
+  shell:
+    "mincstats -biModalT {input} | head -n1 | awk '{{ print $2 }}' > {output}"
+
+rule crop_downsampled:
+  input:
+    "tmp/{input}_ds.mnc"
+  output:
+    "tmp/{input}_ds_volume_{n,\d+}.mnc"
+  params:
+    extent = lambda wildcards, output: COMPONENTS[wildcards.n]
+  shell:
+    "autocrop -reshape -extend {params.extent} {input} {output}"
+
+rule mask_embryo:
+  input:
+    ds="tmp/{input}_ds_volume_{n}.mnc",
+    thres="tmp/{input}_ds_bimodal_thres.txt"
+  output:
+    temp("tmp/{input}_ds_component_{n,\d+}.mnc")
+  shell:
+    'mincmorph -successive "B[`cat {input.thres}`:]DDDGDDDB[1:1]" {input.ds} {output}'
+
+# it's a bit weird that we have to know all files to ask for ... perhaps the different 
+# combinations (here from cartesian product of images and components) should automatically
+# be created and propagated earlier in the pipe (or is this just adding this information to 
+# all intermediate parts??)
+# idea: create product using expand, touch all combinations (making them output files),
+# make all output files params to the segmentation stage
+
+rule extract_embryo:
+  input:
+    orig=expand("{input_dir}/{{input}}.mnc", input_dir=config['input_dir']),
+    bbox="tmp/{input}_ds_component_{n}.mnc"
+  output:
+    "out/{input}_embryo_{n,\d+}.mnc"
+  shell:
+    # mincreshape (autocrop -reshape) will do this in 25MB instead of 13G,
+    # but takes 20min instead of 5
+    "autocrop -resample -bbox {input.bbox} {input.orig} {output}"
+
+rule convert_to_tiff:
+  input:
+    "out/{input}_embryo_{n}.mnc"
+  output:
+    "out/{input}_embryo_{n,\d+}.tiff"
+  shell:
+    "c3d {input} -o {output}"
+
+    
+# hard masking is probably a bad idea without also sending along a mask to hide the sharp gradient ...
+# on the other hand the cylinders are already present, so we don't really care about anything outside them ...
+#rule mask_embryos:
+#  input:
+#    vol="tmp/{input}_component_{n}.mnc",
+#    mask="tmp/{input}_ds_component_{n}_dilated.mnc"
+#  output:
+#    "out/{input}_component_{n,\d+}.mnc"
+#  shell:
+#    "mincmask {input.vol} {input.mask} {output}"
