@@ -1,0 +1,19 @@
+{
+    "__default__":
+    {
+        "memory"   : "2G",
+        "walltime" : "00:30:00"
+    },
+    "downsample_input" :
+    {
+        "memory" : "20G"
+    },
+    "extract_embryo" :
+    {
+        "memory" : "16G"
+    },
+    "convert_to_tiff" :
+    {
+        "memory" : "20G"
+    }
+}
