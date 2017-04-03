@@ -31,7 +31,7 @@ class WrongDimensions(TypeError): pass
 
 
 def tiff_info(tiff_file):
-  info = subprocess.run(["tiffinfo", tiff_file], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL).stdout
+  info = subprocess.run(["tiffinfo", tiff_file], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, check=True).stdout
 
   width  = re.search(rb"Image Width: (?P<width>\d+) ", info).group('width')
   length = re.search(rb"Image Length: (?P<length>\d+)", info).group('length')
@@ -46,7 +46,7 @@ def main(argv):
   args = parser().parse_args(argv[1:])
 
   d = os.path.dirname(args.log_file)
-  all_files = subprocess.run(["ls", "-v", d], stdout=subprocess.PIPE).stdout.split(b"\n")
+  all_files = subprocess.run(["ls", "-v", d], stdout=subprocess.PIPE, check=True).stdout.split(b"\n")
 
   # TODO match base of logfile.*\.tiff? instead of .tiff?
   tiff_files = [f for f in all_files if re.search(pattern=args.regex or b".tiff?", string=f)]
@@ -95,7 +95,7 @@ def main(argv):
   p = subprocess.Popen(args=rawtominc_cmd, stdin=subprocess.PIPE)
   for img in tiff_files:
     out = subprocess.run(["convert", "-quiet", os.path.join(d.encode(), img), "GRAY:-"],
-                         stdout=subprocess.PIPE).stdout
+                         stdout=subprocess.PIPE, check=True).stdout
     try:
       p.stdin.write(out)
     except BrokenPipeError:
