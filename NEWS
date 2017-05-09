@@ -1,0 +1,5 @@
+New in version 0.1
+==================
+First release with working version of convert_CT_image.py which can
+be used to convert TIFF files (potentially being transferred from
+the CT scanning machine) to MINC.
