@@ -1,3 +1,8 @@
+New in version 0.11
+===================
+Fixes to the Snakefile. There were inconsistencies that prevented
+the MINC files to actually be created.
+
 New in version 0.1
 ==================
 First release with working version of convert_CT_image.py which can
