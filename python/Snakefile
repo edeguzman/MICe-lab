@@ -7,35 +7,36 @@ COMPONENTS = dict(zip(COMPONENT_INDICES, ["-40%,0 -40%,0 0,0", "-40%,0 0,-40% 0,
 
 
 FILES, = glob_wildcards(os.path.join(config['input_dir'], '{file}.mnc'))
+input_dir = config['input_dir']
 
 rule all:
   input:
-    expand("out/{file}_component_{n}.mnc",  file=FILES, n=COMPONENT_INDICES),
-    expand("out/{file}_component_{n}.tiff", file=FILES, n=COMPONENT_INDICES)
+    expand(input_dir + "/{file}_embryo_{n}.mnc",  file=FILES, n=COMPONENT_INDICES),
+    expand(input_dir + "/{file}_embryo_{n}.tiff", file=FILES, n=COMPONENT_INDICES)
   #shell:
   #  "su <...> -c 'chown out/{file}_component_{n}.{{mnc,tiff}}'"
 
 rule downsample_input:
   input:
-    expand("{input_dir}/{{input}}.mnc", input_dir=config['input_dir'])
+    expand("{input_dir}/{{input}}.mnc", input_dir=input_dir)
   output:
-    temp("tmp/{input}_ds.mnc")
+    temp(input_dir + "/tmp/{input}_ds.mnc")
   shell:
     "autocrop -isostep 0.1 {input} {output}"
 
 rule compute_bimodalT:
   input:
-    temp("tmp/{input}_ds.mnc")
+    temp(input_dir + "/tmp/{input}_ds.mnc")
   output:
-    temp("tmp/{input}_ds_bimodal_thres.txt")
+    temp(input_dir + "/tmp/{input}_ds_bimodal_thres.txt")
   shell:
     "mincstats -biModalT {input} | head -n1 | awk '{{ print $2 }}' > {output}"
 
 rule crop_downsampled:
   input:
-    "tmp/{input}_ds.mnc"
+    input_dir + "/tmp/{input}_ds.mnc"
   output:
-    "tmp/{input}_ds_volume_{n,\d+}.mnc"
+    temp(input_dir + "/tmp/{input}_ds_volume_{n,\d+}.mnc")
   params:
     extent = lambda wildcards, output: COMPONENTS[wildcards.n]
   shell:
@@ -43,10 +44,10 @@ rule crop_downsampled:
 
 rule mask_embryo:
   input:
-    ds="tmp/{input}_ds_volume_{n}.mnc",
-    thres="tmp/{input}_ds_bimodal_thres.txt"
+    ds=input_dir + "/tmp/{input}_ds_volume_{n}.mnc",
+    thres=input_dir + "/tmp/{input}_ds_bimodal_thres.txt"
   output:
-    temp("tmp/{input}_ds_component_{n,\d+}.mnc")
+    temp(input_dir + "/tmp/{input}_ds_component_{n,\d+}.mnc")
   shell:
     'mincmorph -successive "B[`cat {input.thres}`:]DDDGDDDB[1:1]" {input.ds} {output}'
 
@@ -60,9 +61,9 @@ rule mask_embryo:
 rule extract_embryo:
   input:
     orig=expand("{input_dir}/{{input}}.mnc", input_dir=config['input_dir']),
-    bbox="tmp/{input}_ds_component_{n}.mnc"
+    bbox=input_dir + "/tmp/{input}_ds_component_{n}.mnc"
   output:
-    "out/{input}_embryo_{n,\d+}.mnc"
+    input_dir + "/{input}_embryo_{n,\d+}.mnc"
   shell:
     # mincreshape (autocrop -reshape) will do this in 25MB instead of 13G,
     # but takes 20min instead of 5
@@ -70,9 +71,9 @@ rule extract_embryo:
 
 rule convert_to_tiff:
   input:
-    "out/{input}_embryo_{n}.mnc"
+    input_dir + "/{input}_embryo_{n}.mnc"
   output:
-    "out/{input}_embryo_{n,\d+}.tiff"
+    input_dir + "/{input}_embryo_{n,\d+}.tiff"
   shell:
     "c3d {input} -o {output}"
 
@@ -81,9 +82,9 @@ rule convert_to_tiff:
 # on the other hand the cylinders are already present, so we don't really care about anything outside them ...
 #rule mask_embryos:
 #  input:
-#    vol="tmp/{input}_component_{n}.mnc",
-#    mask="tmp/{input}_ds_component_{n}_dilated.mnc"
+#    vol=input_dir + "/tmp/{input}_component_{n}.mnc",
+#    mask=input_dir + "/tmp/{input}_ds_component_{n}_dilated.mnc"
 #  output:
-#    "out/{input}_component_{n,\d+}.mnc"
+#    input_dir + "/{input}_component_{n,\d+}.mnc"
 #  shell:
 #    "mincmask {input.vol} {input.mask} {output}"
