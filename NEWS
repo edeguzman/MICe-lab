@@ -1,3 +1,11 @@
+New in version 0.12
+===================
+Bug fix to convert_CT_image.py, which did not update the list of
+tiff files present in the logfile directory. This meant that when
+you wanted to convert a MINC file from tiff files that were being
+transferred, the conversion would start regardless of whether the
+tranfer was actually done.
+
 New in version 0.11
 ===================
 Fixes to the Snakefile. There were inconsistencies that prevented
