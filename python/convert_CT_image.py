@@ -65,12 +65,16 @@ def main(argv):
   if args.check_transfer:
     prev_tif_count = -1
     cur_tif_count = len(tiff_files)
+    print("Number of tiff files found: " + str(cur_tif_count))
     while prev_tif_count != cur_tif_count:
       # first wait a bit
       time.sleep(30)
+      # read all files in the directory again:
+      all_files = subprocess.run(["ls", "-v", d], stdout=subprocess.PIPE, check=True).stdout.split(b"\n")
       tiff_files = [f for f in all_files if re.search(pattern=args.regex or bytes(match_string,'ascii'), string=f)]
       prev_tif_count = cur_tif_count
       cur_tif_count = len(tiff_files)
+      print("Number of tiff files found: " + str(cur_tif_count))
 
   if args.print_files or args.print_files_only:
     print("number of files: %d" % len(tiff_files))
