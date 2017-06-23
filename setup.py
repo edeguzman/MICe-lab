@@ -16,6 +16,7 @@ setup(name="MICe-lab",
       packages=['python', 'python.saddle_recon'],
       scripts=['python/saddle_recon/saddle_recon.py',
                'python/convert_CT_image.py',
-               'python/Snakefile'
+               'python/Snakefile',
+               'python/crop_to_brain.py',
                ],
       )
