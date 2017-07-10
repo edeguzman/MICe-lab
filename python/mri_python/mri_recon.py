@@ -106,20 +106,20 @@ def generate_option_parser_and_seq_module(recontypestring=None):
         seqmodname=os.path.basename(recontypestring)
         seqdir=[[os.path.dirname(recontypestring)],None][os.path.dirname(recontypestring)=='']
         if seqdir is None:
-            seqmod_specs = importlib.util.find_spec('mri_python.'+seqmodname)
+            seqmod_specs = importlib.util.find_spec('python.mri_python.'+seqmodname)
         else:
             loader_details = (importlib.machinery.ExtensionFileLoader,importlib.machinery.EXTENSION_SUFFIXES)
             modfinder = importlib.machinery.FileFinder(seqdir, loader_details)
             seqmod_specs = modfinder.find_spec(seqmodname)
 
         if (isinstance(seqmod_specs.loader,zipimport.zipimporter)):
-            seqmodule = seqmod_specs.loader.load_module('mri_python.'+seqmodname)
+            seqmodule = seqmod_specs.loader.load_module('python.mri_python.'+seqmodname)
         else :
             seqmodule = importlib.util.module_from_spec(seqmod_specs)
             seqmod_specs.loader.exec_module(seqmodule)
     except ImportError:
         print("Could not import %s recon module"%recontypestring)
-        seqmod_specs = importlib.util.find_spec('mri_python.'+DEFAULT_RECON_TYPE)
+        seqmod_specs = importlib.util.find_spec('python.mri_python.'+DEFAULT_RECON_TYPE)
         seqmodule = importlib.util.module_from_spec(seqmod_specs)
         seqmod_specs.loader.exec_module(seqmodule)
         #f,filename,description = imp.find_module(DEFAULT_RECON_TYPE)
