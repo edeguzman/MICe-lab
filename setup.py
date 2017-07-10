@@ -5,7 +5,7 @@ from setuptools import setup
 import sys
 
 setup(name="MICe-lab",
-      version='0.12',
+      version='0.13',
       install_requires=[
         'ConfigArgParse>=0.11',
         'numpy',
@@ -16,6 +16,7 @@ setup(name="MICe-lab",
       packages=['python', 'python.saddle_recon'],
       scripts=['python/saddle_recon/saddle_recon.py',
                'python/convert_CT_image.py',
-               'python/Snakefile'
+               'python/Snakefile',
+               'python/crop_to_brain.py',
                ],
       )
