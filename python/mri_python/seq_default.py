@@ -1,6 +1,6 @@
 
 from optparse import OptionGroup
-import mri_python.recon_genfunctions as rgf
+import python.mri_python.recon_genfunctions as rgf
 from numpy import nonzero,empty
 
 def seq_specific_options(parser):

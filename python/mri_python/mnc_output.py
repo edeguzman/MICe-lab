@@ -4,7 +4,7 @@ import imp
 #from sys import path
 #path.insert(0,"/axiom2/projects/software/arch/linux-precise/python/pyminc-0.41-py2.7.egg")
 from pyminc.volumes.factory import *
-from mri_python.recon_genfunctions import get_dict_value
+from python.mri_python.recon_genfunctions import get_dict_value
 from scipy.signal import medfilt
 import string
 import os

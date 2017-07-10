@@ -1,9 +1,9 @@
 
 from optparse import OptionGroup
-import mri_python.recon_genfunctions as rgf
-import mri_python.varian_fid_corrections as vfc
-import mri_python.resp_sg as rsg
-import mri_python.coil_decouple as cd
+import python.mri_python.recon_genfunctions as rgf
+import python.mri_python.varian_fid_corrections as vfc
+import python.mri_python.resp_sg as rsg
+import python.mri_python.coil_decouple as cd
 
 def seq_specific_options(parser):
     optgroup = OptionGroup(parser,"ge3dmice_sg_cylA","sequence-specific reconstruction options")

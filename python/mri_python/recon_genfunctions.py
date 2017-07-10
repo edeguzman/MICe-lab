@@ -7,7 +7,7 @@ from numpy.fft import fft2 as fft2d
 from numpy.fft import fftn as fftnd
 
 #from LinearAlgebra import *
-import mri_python.varian_read_file as vrf
+import python.mri_python.varian_read_file as vrf
 
 from scipy.signal import medfilt
 

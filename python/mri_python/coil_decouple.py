@@ -1,5 +1,5 @@
 from sys import path as syspath
-from mri_python.varian_read_file import *
+from python.mri_python.varian_read_file import *
 from scipy.ndimage.morphology import binary_dilation
 from scipy.linalg import lstsq,inv
 from numpy.fft import *

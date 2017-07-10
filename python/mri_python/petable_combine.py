@@ -9,8 +9,8 @@
 
 from sys import argv
 from sys import path as syspath
-from mri_python.varian_read_file import parse_petable_file
-from mri_python.cyltable_gen import petable_file_output
+from python.mri_python.varian_read_file import parse_petable_file
+from python.mri_python.cyltable_gen import petable_file_output
 import string
 import os
 import getopt

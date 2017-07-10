@@ -8,11 +8,11 @@
 
 from sys import argv
 from sys import path as syspath
-from mri_python.varian_read_file import parse_petable_file
+from python.mri_python.varian_read_file import parse_petable_file
 import getopt
 import re
 from numpy import *
-from mri_python.varian_read_file import parse_petable_file
+from python.mri_python.varian_read_file import parse_petable_file
 from optparse import OptionParser, Option, OptionValueError
 from pylab import plot,imshow,show,colorbar
 

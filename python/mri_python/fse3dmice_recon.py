@@ -7,8 +7,8 @@
 import os
 from sys import path as syspath
 from optparse import OptionGroup
-from mri_python.recon_genfunctions import *  
-import mri_python.varian_read_file as vrf
+from python.mri_python.recon_genfunctions import *
+import python.mri_python.varian_read_file as vrf
 #from varian_recon import *
 from pylab import figure,plot,subplot,show,imshow,colorbar,cm
 from scipy.optimize import leastsq

@@ -1,7 +1,7 @@
 
 from optparse import OptionGroup
-import mri_python.recon_genfunctions as rgf
-from mri_python.varian_read_file import parse_petable_file
+import python.mri_python.recon_genfunctions as rgf
+from python.mri_python.varian_read_file import parse_petable_file
 from numpy import * #nonzero,empty,append,zeros,exp,arange,abs
 from scipy.optimize import leastsq
 

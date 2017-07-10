@@ -1,7 +1,7 @@
 from scipy.interpolate import LSQUnivariateSpline
 from scipy.stats import mode
 import collections
-from mri_python.varian_read_file import *
+from python.mri_python.varian_read_file import *
 from itertools import combinations
 from numpy.fft import *
 from scipy.linalg import lstsq
