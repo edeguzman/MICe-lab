@@ -1,0 +1,1 @@
+bin_SCRIPTS = cryo_coil_distortion_correction_may_2016.pl saddle_coil_distortion_correction_august_2015.pl distortion_correction_september_2014.pl
