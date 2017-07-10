@@ -7,7 +7,6 @@
 import os
 from sys import path as syspath
 from optparse import OptionGroup
-syspath.append('/home/bjnieman/source/mri_recon') 
 from mri_python.recon_genfunctions import *  
 import mri_python.varian_read_file as vrf
 #from varian_recon import *
@@ -361,7 +360,7 @@ def Echo_shift_apply(kspace1,kspace2,petable_name,inputAcq,maxroind):
     
 # Example command:
 
-#/home/bjnieman/source/vnmr/varian_recon_4/varian_recon.py /micehome/leigh/PythonPlay/cyl_fse_recon/Brian/fse3dmice_recon \
+#varian_recon.py /micehome/leigh/PythonPlay/cyl_fse_recon/Brian/fse3dmice_recon \
 #              --phasecorr_data /projects/souris/leigh/fid/03feb14.fid_75um/phasecalibration \
 #              --phasecorr_table /projects/souris/leigh/fid/03feb14.fid_75um/phasecalibration/phasecorr_272_nf8_ni272 \
 #              --petable /projects/souris/leigh/fid/03feb14.fid_75um/LSN_E3_E4_pseudocyl_etl8_272_nf64_ni80 \

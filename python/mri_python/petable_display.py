@@ -8,7 +8,6 @@
 
 from sys import argv
 from sys import path as syspath
-syspath.append('/home/bjnieman/source/vnmr')
 from mri_python.varian_read_file import parse_petable_file
 import getopt
 import re

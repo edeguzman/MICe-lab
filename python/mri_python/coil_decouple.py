@@ -1,5 +1,4 @@
 from sys import path as syspath
-syspath.append('/home/bjnieman/source/mri_recon')
 from mri_python.varian_read_file import *
 from scipy.ndimage.morphology import binary_dilation
 from scipy.linalg import lstsq,inv

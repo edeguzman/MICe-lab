@@ -9,7 +9,6 @@
 
 from sys import argv
 from sys import path as syspath
-syspath.append('/home/bjnieman/source/vnmr')
 from mri_python.varian_read_file import parse_petable_file
 from mri_python.cyltable_gen import petable_file_output
 import string
