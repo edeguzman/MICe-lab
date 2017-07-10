@@ -1,3 +1,9 @@
+New in version 0.13
+===================
+- Working version of the saddle coil reconstruction.
+- added script to crop in-vivo images with a large field of view
+- added distortion correction scripts to the repository
+
 New in version 0.12
 ===================
 Bug fix to convert_CT_image.py, which did not update the list of
