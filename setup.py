@@ -13,10 +13,11 @@ setup(name="MICe-lab",
         'typing',
         'snakemake'
       ],
-      packages=['python', 'python.saddle_recon'],
+      packages=['python', 'python.saddle_recon','python.mri_python'],
       scripts=['python/saddle_recon/saddle_recon.py',
                'python/convert_CT_image.py',
                'python/Snakefile',
                'python/crop_to_brain.py',
+               'python/mri_python/mri_recon.py',
                ],
       )
