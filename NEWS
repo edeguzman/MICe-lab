@@ -1,3 +1,7 @@
+New in version 0.14
+===================
+- full paths to executables removed from the code
+
 New in version 0.13
 ===================
 - Working version of the saddle coil reconstruction.

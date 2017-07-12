@@ -1,7 +1,7 @@
 # Require autoconf 2.57 or newer.
 AC_PREREQ([2.57])
 
-AC_INIT([MICe-lab],[0.13],[Matthijs van Eede matthijs.vaneede@sickkids.ca])
+AC_INIT([MICe-lab],[0.14],[Matthijs van Eede matthijs.vaneede@sickkids.ca])
 
 AM_INIT_AUTOMAKE
 
