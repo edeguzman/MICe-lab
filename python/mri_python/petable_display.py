@@ -14,7 +14,7 @@ import re
 from numpy import *
 from python.mri_python.varian_read_file import parse_petable_file
 from optparse import OptionParser, Option, OptionValueError
-from pylab import plot,imshow,show,colorbar
+from matplotlib.pylab import plot,imshow,show,colorbar
 
 program_name = 'petable_display.py'
 

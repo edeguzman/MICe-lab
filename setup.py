@@ -5,13 +5,14 @@ from setuptools import setup
 import sys
 
 setup(name="MICe-lab",
-      version='0.14',
+      version='0.15',
       install_requires=[
         'ConfigArgParse>=0.11',
         'numpy',
         'pyminc',
         'typing',
-        'snakemake'
+        'snakemake',
+        'matplotlib'
       ],
       packages=['python', 'python.saddle_recon','python.mri_python'],
       scripts=['python/saddle_recon/saddle_recon.py',
@@ -19,5 +20,6 @@ setup(name="MICe-lab",
                'python/Snakefile',
                'python/crop_to_brain.py',
                'python/mri_python/mri_recon.py',
+               'python/dense_dist_corr.py',
                ],
       )

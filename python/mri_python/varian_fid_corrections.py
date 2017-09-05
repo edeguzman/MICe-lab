@@ -121,7 +121,7 @@ def rep_pos_corr(inputAcq,petable,imouse=None,petable_arrays=('t1','t2'),corrmat
     kplanes = zeros((len(mouselist),noutreps,corrmat,corrmat),complex)
     for k in range(len(mouselist)):
         if (get_dict_value(inputAcq.param_dict,'sgflag','n')=='y'):
-            maxind = kdata.shape[-1]-nro+argmax(abs(kdata[k,0,corrmat/2,corrmat/2,-nro:]),axis=-1)
+            maxind = kdata.shape[-1]-nro+argmax(abs(kdata[k,0,corrmat//2,corrmat//2,-nro:]),axis=-1)
         else:
             maxind = argmax(abs(kdata[k,0,corrmat/2,corrmat/2,:]),axis=-1)
         kplanes[k,:,:,:] = kdata[k,:,:,:,maxind]
