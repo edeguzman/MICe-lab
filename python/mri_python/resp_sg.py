@@ -4,7 +4,7 @@ from os import path as ospath
 #from struct import calcsize as sizeof
 from python.mri_python.varian_read_file import *
 from python.mri_python.varian_fid_corrections import *
-from pylab import hist,median
+from matplotlib.pylab import hist,median
 from scipy.signal import medfilt
 from python.mri_python.recon_genfunctions import get_dict_value
 from scipy.stats import mode

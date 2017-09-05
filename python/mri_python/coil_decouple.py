@@ -67,7 +67,7 @@ def fetch_grappa4prof_data(inputAcq,petable,remove_ppeshift=True,dcplppeadj=None
     n_grabs = where(n_grabs>0,n_grabs,1)
     raw_data = raw_data/n_grabs[newaxis,:,:,newaxis]
     if (get_dict_value(inputAcq.param_dict,'sgflag','n')=='y'):
-        maxind = raw_data.shape[-1]-nro+argmax(abs(raw_data[0,0,grappapix/2,-nro::]))
+        maxind = raw_data.shape[-1]-nro+argmax(abs(raw_data[0,0,grappapix//2,-nro::]))
         endpt = [maxind+int(nro/2),nacq-1][maxind+int(nro/2)>=nacq]
         startpt = endpt-nro
     else:
