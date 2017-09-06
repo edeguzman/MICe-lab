@@ -20,6 +20,5 @@ setup(name="MICe-lab",
                'python/Snakefile',
                'python/crop_to_brain.py',
                'python/mri_python/mri_recon.py',
-               'python/dense_dist_corr.py',
                ],
       )

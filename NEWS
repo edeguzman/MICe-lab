@@ -1,3 +1,8 @@
+New in version 0.15
+===================
+- add matplotlib dependency in `setup.py`
+- import matplotlib.pylab instead of pylab
+
 New in version 0.14
 ===================
 - full paths to executables removed from the code
