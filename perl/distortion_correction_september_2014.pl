@@ -174,8 +174,8 @@ foreach my $mouse (@mice)
       ${coil} == 14 or 
       ${coil} == 15 or 
       ${coil} == 16 ) {
-    $trans_to_use = "/projects/souris/matthijs/2013-11-Distortion-Correction/2014-09-bsplines-on-landmarks/CONCAT_CT_and_MR_coil_${coil}_lambda_0.001_distance_10_range_5.xfm";
-    $deformation_grid = "/projects/souris/matthijs/2013-11-Distortion-Correction/2014-09-bsplines-on-landmarks/CONCAT_CT_and_MR_coil_${coil}_lambda_0.001_distance_10_range_5_grid_0.mnc";
+    $trans_to_use = "/hpf/largeprojects/MICe/tools/distortion_correction/2013-11-Distortion-Correction/2014-09-bsplines-on-landmarks/CONCAT_CT_and_MR_coil_${coil}_lambda_0.001_distance_10_range_5.xfm";
+    $deformation_grid = "/hpf/largeprojects/MICe/tools/distortion_correction/2013-11-Distortion-Correction/2014-09-bsplines-on-landmarks/CONCAT_CT_and_MR_coil_${coil}_lambda_0.001_distance_10_range_5_grid_0.mnc";
   }
   #
   # Coils 8-12
@@ -193,8 +193,8 @@ foreach my $mouse (@mice)
         ${coil} == 10 or 
         ${coil} == 11 or 
         ${coil} == 12 ) { 
-    $trans_to_use = "/projects/souris/matthijs/2013-11-Distortion-Correction/2014-09-bsplines-on-landmarks/CONCAT_CT_and_MR_coil_${coil}_lambda_0.01_distance_10_range_5.xfm";
-    $deformation_grid = "/projects/souris/matthijs/2013-11-Distortion-Correction/2014-09-bsplines-on-landmarks/CONCAT_CT_and_MR_coil_${coil}_lambda_0.01_distance_10_range_5_grid_0.mnc";
+    $trans_to_use = "/hpf/largeprojects/MICe/tools/distortion_correction/2013-11-Distortion-Correction/2014-09-bsplines-on-landmarks/CONCAT_CT_and_MR_coil_${coil}_lambda_0.01_distance_10_range_5.xfm";
+    $deformation_grid = "/hpf/largeprojects/MICe/tools/distortion_correction/2013-11-Distortion-Correction/2014-09-bsplines-on-landmarks/CONCAT_CT_and_MR_coil_${coil}_lambda_0.01_distance_10_range_5_grid_0.mnc";
   }
   else {
     print "\nError: the vnmr:coil entry for file $mouse must be one from 1-16 (was: $coil )\n";

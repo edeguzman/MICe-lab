@@ -162,8 +162,8 @@ foreach my $mouse (@mice)
       ${coil} == 5 or
       ${coil} == 6 or 
       ${coil} == 7 ) {
-    $trans_to_use     = "/projects/muisjes/backup/matthijs/2015-07-saddle-distortion-correction/final_corrections/distortion_correction_coil_${coil}_lambda_0.01_distance_10.xfm";
-    $deformation_grid = "/projects/muisjes/backup/matthijs/2015-07-saddle-distortion-correction/final_corrections/distortion_correction_coil_${coil}_lambda_0.01_distance_10_grid_0.mnc";
+    $trans_to_use     = "/hpf/largeprojects/MICe/tools/distortion_correction/2015-07-saddle-distortion-correction/final_corrections/distortion_correction_coil_${coil}_lambda_0.01_distance_10.xfm";
+    $deformation_grid = "/hpf/largeprojects/MICe/tools/distortion_correction/2015-07-saddle-distortion-correction/final_corrections/distortion_correction_coil_${coil}_lambda_0.01_distance_10_grid_0.mnc";
   }
   else {
     print "\nError: the vnmr:coil entry for file $mouse must be one from 1-7 (was: $coil )\n";
