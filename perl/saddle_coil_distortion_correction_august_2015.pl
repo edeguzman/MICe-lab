@@ -14,7 +14,7 @@ on the Varian scanner (created in August 2015)
 
 $0 [options] -output-dir /path/to/output input_1.mnc input_2.mnc ... input_n.mnc
 
-By default the distortion corrections are sent to the farms (sge). If you want to run the corrections on your machine, run:
+By default the distortion corrections are sent to the farms (qbatch). If you want to run the corrections on your machine, run:
 
 $0 [options] -spawn -output-dir /path/to/output input_1.mnc input_2.mnc ... input_n.mnc
 ";
@@ -30,9 +30,8 @@ Getopt::Tabular::SetHelp($help, $usage);
 my $output_dir = undef;
 my $resampling = "-sinc";
 my $remove_tmp_like = 1;
-my $sge = 1;
+my $qbatch = 1;
 my $spawn = 0;
-my $sgequeue = "all.q";
 my $check_mm_variables = 1;
 
 # handle arguments
@@ -41,12 +40,10 @@ my @arg_table =
     (@DefaultArgs,
       ["-spawn", "boolean", 1, \$spawn,
        "Use the perl system interface to spawn job (run jobs on your local machine)"],
-      ["-sge", "boolean", 1, \$sge,
-       "Use SGE to spawn jobs [default]"],
+      ["-qbatch", "boolean", 1, \$qbatch,
+       "Use qbatch to spawn jobs [default]"],
       ["-check_mm|-no-check_mm", "boolean", 1, \$check_mm_variables,
        "Use the mm_ppe2, mm_ppe and mm_pro header values to determine that the correct hive table was used in the file reconstruction"],
-      ["-sge-queue", "string", 1, \$sgequeue,
-       "Which SGE queues to send the jobs to [default: all.q]"],
       ["-sinc", "const", "-sinc", \$resampling,
        "Use sinc resampling [default]"],
       ["-trilinear", "const", "-trilinear", \$resampling,
@@ -82,7 +79,7 @@ die $usage unless ($output_dir and $#mice >= 0);
 # The coil each file was scanned in is retrieved
 # from the vnmr:coil attribute in the MINC header. 
 
-RegisterPrograms(["mincinfo", "mincresample", "sge_batch"]);
+RegisterPrograms(["mincinfo", "mincresample", "qbatch"]);
 system("mkdir -p $output_dir") unless (-d $output_dir);
 
 foreach my $mouse (@mice) 
@@ -348,7 +345,7 @@ foreach my $mouse (@mice)
   
   # add information about the distortion correction:
   my $minc_header_addon = "";
-  if($sge and !$spawn)  {
+  if($qbatch and !$spawn)  {
     $minc_header_addon .= "minc_modify_header -sinsert distortioncorrection:coil=${coil} -sinsert distortioncorrection:programcall=\\\"";
   }
   else{
@@ -360,7 +357,7 @@ foreach my $mouse (@mice)
     $minc_header_addon .= $ARGV[$i];
     $minc_header_addon .= " ";
   }
-  if($sge and !$spawn)  {
+  if($qbatch and !$spawn)  {
     $minc_header_addon .= "\\\" ${output} ";
   }
   else{
@@ -368,30 +365,20 @@ foreach my $mouse (@mice)
   }
 	
 	my $combined_call = "";
-	if($sge and !$spawn)  {
-    $combined_call .= "sge_batch -q $sgequeue -l vf=2G -J dc-saddle-2G-${base} \"";
-  }
+	if($qbatch and !$spawn)  {
+    $combined_call .= " echo \""
+}
 	$combined_call .= $full_line_of_commands;
 	$combined_call .= ";";
 	$combined_call .= $minc_header_addon;
-	if($sge and !$spawn)  {
-    $combined_call .= " \"";
+	if($qbatch and !$spawn)  {
+    $combined_call .= " \" | qbatch - --mem=2G -N dc-saddle-2G-${base}";
   }
-	
 
 	
 	if($Execute) 
 	{
-    if(!$sge or $spawn) 
-    {
       system("$combined_call")
-    }
-    else 
-    {
-      #Spawn(["sge_batch", "-q", $sgequeue, "-l", "vf=4G", "-J", "dc-4G-${base}", $combined_call]);
-      system("$combined_call");
-      #system("sge_batch -l vf=4G -J dc-4G-${base}  ", "$full_line_of_commands");
-    }
  	}
   else 
   {
