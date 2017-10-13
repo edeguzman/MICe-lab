@@ -5,7 +5,7 @@ from setuptools import setup
 import sys
 
 setup(name="MICe-lab",
-      version='0.15',
+      version='0.16',
       install_requires=[
         'pydpiper>=2.0.9',
         'ConfigArgParse>=0.11',
@@ -15,7 +15,7 @@ setup(name="MICe-lab",
         'snakemake',
         'matplotlib'
       ],
-      packages=['python', 'python.saddle_recon','python.mri_python'],
+      packages=['python', 'python.saddle_recon', 'python.mri_python'],
       scripts=['python/saddle_recon/saddle_recon.py',
                'python/convert_CT_image.py',
                'python/Snakefile',
