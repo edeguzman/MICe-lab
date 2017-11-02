@@ -73,7 +73,6 @@ class seq_reconstruction():
             print("Not ready for Bruker acquisition...")
         #fetch fid data from phase correction
         phase_fid_data = read_correction_fid(phasecorrAcq)
-
         #specify phase correction petable
         if (not self.options.phasecorr_table):
             print('No phase correction petable specified')
@@ -86,7 +85,7 @@ class seq_reconstruction():
         #petable checks
         t1_array = vrf.parse_petable_file(phasecorr_petable_name,'t1')
         t2_array = vrf.parse_petable_file(phasecorr_petable_name,'t2')
-        nfid = phasecorrAcq.nfid
+        nfid = int(phasecorrAcq.nfid)
         etl = int(vrf.get_dict_value(phasecorrAcq.param_dict,'etl',6))
         nf = phasecorrAcq.nf
         ni_perchan = phasecorrAcq.ni*phasecorrAcq.nfid
@@ -134,7 +133,7 @@ class seq_reconstruction():
             fid_data,data_error = self.inputAcq.getdatafids(k*etl,(k+1)*etl,rcvrnum=imouse)
             kspace[k,:,:] = fid_data.copy()
         #apply read correction
-        roramp = exp(1.j*2*pi*0.5*self.even_odd_pixel_shift[imouse]*(append(arange(nro/2),arange(-nro/2,0,1)))/nro)
+        roramp = exp(1.j*2*pi*0.5*self.even_odd_pixel_shift[imouse]*(append(arange(nro/2),arange(-nro/2,0,1)))/nro) # original
         for k in range(kspace.shape[1]):
             kspace[:,k,:] = ifft(roramp**((-1)**(k%2))*self.ephase_corr[imouse,k]*
                                     fft(kspace[:,k,:],axis=-1),axis=-1)
@@ -182,12 +181,15 @@ def moment_terms_from_petable(t1_array,t2_array,etl):
 def read_correction_fid(inputAcq):
     nro = int(vrf.get_dict_value(inputAcq.param_dict,'np',1)/2)
     etl = int(vrf.get_dict_value(inputAcq.param_dict,'etl',1))
+    nfid = int(vrf.get_dict_value(inputAcq.param_dict,'nfid',80)) # added this LSN, Oct2017
+    nf = int(vrf.get_dict_value(inputAcq.param_dict,'nf',80)) # added this, LSN, Oct2017
     ni_perchan = inputAcq.ni*inputAcq.nfid
-    raw_data = zeros((inputAcq.nfid,inputAcq.nmice,ni_perchan*(inputAcq.nf/etl)/inputAcq.nfid,inputAcq.nf,nro),complex) 
+    # added / in inputAcq.nf//etl
+    raw_data = zeros((inputAcq.nfid,inputAcq.nmice,ni_perchan*(inputAcq.nf//etl)//inputAcq.nfid,inputAcq.nf,nro),complex)
     for imouse in range (inputAcq.nmice):
         for j in range((ni_perchan*(inputAcq.nf//etl))):
             fid_data,data_error = inputAcq.getdatafids(j*inputAcq.nf,(j+1)*inputAcq.nf,rcvrnum=imouse)
-            raw_data[j//(ni_perchan*(inputAcq.nf//etl)//inputAcq.nfid),imouse,j%(ni_perchan*(inputAcq.nf//etl)//inputAcq.nfid),:,:] = fid_data[:,:].copy()
+            raw_data[int(j/(ni_perchan*(inputAcq.nf/etl)//inputAcq.nfid)),imouse,int(j%(ni_perchan*(inputAcq.nf/etl)//inputAcq.nfid)),:,:] = fid_data[:,:].copy() # added int designations here, LSN Oct 2017
     return raw_data 
     
    
@@ -217,7 +219,8 @@ def ROshift(kline1,kline2,start=-2,stop=2,step=0.1):
 #readout shift calibration
 def apply_RO_shift(kline,pixel_shift):               
     nro=kline.shape[-1]
-    roramp = exp(1.j*2*pi*0.5*pixel_shift*(append(arange(nro//2),arange(-nro/2,0,1)))/nro)
+    #added / in -nro//2
+    roramp = exp(1.j*2*pi*0.5*pixel_shift*(append(arange(nro//2),arange(-nro//2,0,1)))/nro)
     # second: roramp = exp(1.j*arange(nro)*2*pi*pixel_shift/nro) 
     # first: roramp = exp(1.j*(arange(nro)-nro/2)*2*pi*pixel_shift/nro) 
     klinemod = ifft(((roramp)*fft(kline,axis=-1)),axis=-1)
@@ -272,7 +275,7 @@ def Echo_shift(kplane1,kplane2,minstep=-2,maxstep=2,stepsize=0.05):
     phaseramp1=exp(-1.j*2*pi*(append(arange(kplane1.shape[-1]/2),arange(-kplane1.shape[-1]/2,0,1)))/kplane1.shape[-1])
     phaseramp2=exp(-1.j*2*pi*(append(arange(kplane1.shape[-2]/2),arange(-kplane1.shape[-2]/2,0,1)))/kplane1.shape[-2])
     steps=arange(minstep,maxstep,stepsize) 
-    xyvals = zeros((len(steps),len(steps),2),float)
+    xyvals = zeros((len(steps),len(steps),2),float) 
     xyvals[:,:,1]=steps[newaxis,:]
     xyvals[:,:,0]=steps[:,newaxis]
     D = zeros((len(steps),len(steps)),float)
@@ -294,14 +297,15 @@ def Echo_shift(kplane1,kplane2,minstep=-2,maxstep=2,stepsize=0.05):
     i_2end = [len(steps)-1,i_2+delta][i_2<len(steps)-delta]
     i_1start=[0,i_1-delta][i_1>=delta]
     i_1end = [len(steps)-1,i_1+delta][i_1<len(steps)-delta]
-    A = zeros(((i_2end-i_2start)*(i_1end-i_1start),6),float)
-    A[:,0]=ravel(xyvals[i_2start:i_2end,i_1start:i_1end,1]**2)
-    A[:,1]=ravel(xyvals[i_2start:i_2end,i_1start:i_1end,1]*xyvals[i_2start:i_2end,i_1start:i_1end,0])
-    A[:,2]=ravel(xyvals[i_2start:i_2end,i_1start:i_1end,0]**2)
-    A[:,3]=ravel(xyvals[i_2start:i_2end,i_1start:i_1end,1])
-    A[:,4]=ravel(xyvals[i_2start:i_2end,i_1start:i_1end,0])
+    A = zeros((int(i_2end-i_2start)*(int(i_1end-i_1start)),6),float) 
+    # added "int"s for python3 conversion - LSN Oct 2017
+    A[:,0]=ravel(xyvals[int(i_2start):int(i_2end),int(i_1start):int(i_1end),1]**2)
+    A[:,1]=ravel(xyvals[int(i_2start):int(i_2end),int(i_1start):int(i_1end),1]*xyvals[int(i_2start):int(i_2end),int(i_1start):int(i_1end),0])
+    A[:,2]=ravel(xyvals[int(i_2start):int(i_2end),int(i_1start):int(i_1end),0]**2)
+    A[:,3]=ravel(xyvals[int(i_2start):int(i_2end),int(i_1start):int(i_1end),1])
+    A[:,4]=ravel(xyvals[int(i_2start):int(i_2end),int(i_1start):int(i_1end),0])
     A[:,5]=ones(A.shape[0])
-    N = ravel(D[i_2start:i_2end,i_1start:i_1end])
+    N = ravel(D[int(i_2start):int(i_2end),int(i_1start):int(i_1end)])
     cfit,resids,rank,s=lstsq(A,N)
     maxx=(((cfit[1])*(cfit[4]))-(2*(cfit[3])*(cfit[2]))/((4*cfit[0]*cfit[2])-(cfit[1])**2))   # x= first from when dD/dx=0
     maxy=(((cfit[1]*cfit[3])-(2*cfit[4]*cfit[0]))/((4*cfit[0]*cfit[2])-((cfit[1])**2)))       # y= first from when dD/dy=0
