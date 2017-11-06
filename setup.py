@@ -5,13 +5,14 @@ from setuptools import setup
 import sys
 
 setup(name="MICe-lab",
-      version='0.16',
+      version='0.17',
       install_requires=[
         'pydpiper>=2.0.9',
         'ConfigArgParse>=0.11',
         'numpy',
         'pyminc',
         'typing',
+        'scipy',
         'snakemake',
         'matplotlib'
       ],
@@ -21,5 +22,6 @@ setup(name="MICe-lab",
                'python/Snakefile',
                'python/crop_to_brain.py',
                'python/mri_python/mri_recon.py',
+               'python/mri_python/fse3dmice_recon.py',
                ],
       )
