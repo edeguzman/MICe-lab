@@ -1,3 +1,14 @@
+New in version 0.17
+===================
+- added FSE recon script
+- added scipy dependency
+
+New in version 0.16
+===================
+- convert distortion correction script to use qbatch instead of sge_batch
+- various changes to filepaths
+- small Python 3 conversion changes
+
 New in version 0.15
 ===================
 - add matplotlib dependency in `setup.py`
