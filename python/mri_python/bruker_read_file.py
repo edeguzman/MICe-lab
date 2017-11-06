@@ -13,7 +13,7 @@ class FatalError(Exception):
 
 def get_dict_value(image_param_dict,key,default):
     retvalue=default
-    if image_param_dict.has_key(key):
+    if key in image_param_dict:
         retvalue=image_param_dict[key]
     return retvalue
 
@@ -50,18 +50,18 @@ class BrukerAcquisition():
         elif ('PVM_SpecMatrix' in self.method_param_dict):
             #need to reshape this better
             data_shape[-3::] = array([1,1,self.method_param_dict['PVM_SpecMatrix'][0]],int) #leave 1's in for consistency
-        if self.method_param_dict.has_key('PVM_EncActReceivers'):
+        if 'PVM_EncActReceivers' in self.method_param_dict:
            data_shape[-4] = self.method_param_dict["PVM_EncActReceivers"].count('On') #nrcvrs
         self.nrcvrs = data_shape[-4]
         nslices = sum(get_dict_value(self.method_param_dict,'PVM_SPackArrNSlices',[1]))
         if (nslices>1):
             data_shape[-3] *= nslices
-        if self.method_param_dict.has_key('PVM_NRepetitions'):
+        if 'PVM_NRepetitions' in self.method_param_dict:
             nreps = self.method_param_dict['PVM_NRepetitions']
             if (nreps>0): data_shape[-5] = nreps
         nframes = 0
-        if self.method_param_dict.has_key('PVM_NMovieFrames'):
-            if self.method_param_dict.has_key('PVM_MovieOnOff'):
+        if 'PVM_NMovieFrames' in self.method_param_dict:
+            if 'PVM_MovieOnOff' in self.method_param_dict:
                 if (self.method_param_dict['PVM_MovieOnOff']=='On'):
                     nframes = self.method_param_dict['PVM_NMovieFrames']
         if (nframes>1):
@@ -153,7 +153,8 @@ class BrukerAcquisition():
         if 1: #(not self.method_param_dict.has_key("MICe_SliceOffset")):
             self.method_param_dict["MICe_SliceOffset"]=array([sum(self.gmatrix[2,:]*default_hive_table[j]) for j in range(4)],float)
         #finally, open fid file for reading data
-        self.fidfilehandle=open(fid_file,'r')
+        #file encogind changes from 'r' (python 2) to 'br' (python 3)
+        self.fidfilehandle=open(fid_file,'br')
     def close(self):
         self.fidfilehandle.close()
     def getdatafids(self,fid_start,fid_end,rcvrnum=None):
@@ -176,7 +177,9 @@ class BrukerAcquisition():
                 self.fidfilehandle.seek(self.blocksize*(fid_start+j)+2*self.nro*datasize*crcvrs[k],0)
                 bindata=A.array(self.datatype)
                 try:
-                    bindata.read(self.fidfilehandle,2*self.nro)
+                    # array.read() is depricated in python 3
+                    # bindata.read(self.fidfilehandle,2*self.nro)
+                    bindata.fromfile(self.fidfilehandle, int(2*self.nro))
                 except EOFError:
                     print('Error(%s): Missing data in file!' % program_name)
                     data_error = j
@@ -223,7 +226,7 @@ def bruker_paramfile_to_dict(brukerparamfile):
                         c_matchiter=c_regexpr.finditer(slicegeostr)
                         val=[]
                         for c_matches in c_matchiter:
-                            valE={'Gmatrix':  reshape(array(map(float,c_matches.group('Gmatrix').split())),(3,3)),
+                            valE={'Gmatrix':  reshape(array(list(map(float,c_matches.group('Gmatrix').split()))),(3,3)),
                                  'Offset':   array(map(float,c_matches.group('Offset').split())),
                                  'Fov':      array(map(float,c_matches.group('Fov').split())),
                                  'RowOrder': [c_matches.group('Row1'),c_matches.group('Row2'),c_matches.group('Row3')],
