@@ -3,7 +3,7 @@ import os
 import re
 from numpy import *
 from numpy.linalg import lstsq
-from TV_stitch_v3 import TEMPDIRECTORY,program_name,run_subprocess
+from TV_stitch import TEMPDIRECTORY,program_name,run_subprocess
 
 def IM_intensity_average(imgfile):
     cmdstr = "identify -verbose %s | grep mean "%imgfile
