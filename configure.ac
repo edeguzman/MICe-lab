@@ -7,6 +7,7 @@ AC_INIT([MICe-lab],[0.14],[Matthijs van Eede matthijs.vaneede@sickkids.ca])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 
 AC_PROG_CC
+AC_PROG_CXX
 
 # The argument is the name of the generated header file.
 # It is recommended to leave it as "config.h".
