@@ -2,5 +2,5 @@
 # we have README.md instead of README
 AUTOMAKE_OPTIONS = foreign
 
-SUBDIRS = perl
+SUBDIRS = perl src
 
