@@ -7,9 +7,10 @@ AC_PROG_CC
 AC_PROG_CXX
 
 PKG_CHECK_EXISTS(opencv, [
-  CV_LIB_EXTRA="$(pkg-config --libs-only-L opencv | cut -f1 -d' ' | sed 's|-L||' | sed 's|lib/?$|share/OpenCV/3rdparty/lib|')"
-  LDFLAGS="-L$CV_LIB_EXTRA"
-  CPPFLAGS="$(pkg-config --cflags --libs opencv)"],
+  CV_LIB_EXTRA="$(pkg-config --libs-only-L opencv | cut -f1 -d' ' | sed 's|-L||' | sed -E 's|lib/?$|share/OpenCV/3rdparty/lib|')"
+  LDFLAGS="$LDFLAGS -L$CV_LIB_EXTRA $(pkg-config --libs-only-L opencv)"
+  LIBS="$LIBS $(pkg-config --libs-only-l opencv)"
+  CPPFLAGS="$CPPFLAGS $(pkg-config --cflags opencv)"],
   [AC_MSG_ERROR([OpenCV not found.])]
 )
 
