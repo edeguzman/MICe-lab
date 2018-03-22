@@ -11,7 +11,7 @@ PKG_CHECK_EXISTS(opencv, [
   LDFLAGS="$LDFLAGS -L$CV_LIB_EXTRA $(pkg-config --libs-only-L opencv)"
   LIBS="$LIBS $(pkg-config --libs-only-l opencv)"
   CPPFLAGS="$CPPFLAGS $(pkg-config --cflags opencv)"],
-  [AC_MSG_ERROR([OpenCV not found.])]
+  [AC_MSG_ERROR([OpenCV not found. Consider adjusting the PKG_CONFIG_PATH environment variable if it is installed in a non-standard prefix.])]
 )
 
 # The argument is the name of the generated header file.

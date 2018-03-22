@@ -12,7 +12,7 @@ Python3
 
 Installation
 ------------
-The perl code:
+The perl and C++ code:
 <pre><code>
 ./autogen.sh
 ./configure
