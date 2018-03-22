@@ -1,10 +1,8 @@
 #include <opencv2/opencv.hpp>
+#include <getopt.h>
 
 using namespace cv;
 using namespace std;
-
-//compile with: 
-// g++ cvRectCrop.cpp -o cvRectCrop -L/usr/local/lib -I/usr/local/include/opencv -L${exec_prefix}/lib -lopencv_shape -lopencv_stitching -lopencv_objdetect -lopencv_superres -lopencv_videostab -lopencv_calib3d -lopencv_features2d -lopencv_highgui -lopencv_videoio -lopencv_imgcodecs -lopencv_video -lopencv_photo -lopencv_ml -lopencv_imgproc -lopencv_flann -lopencv_viz -lopencv_core
 
 int crpleft=0,crptop=0,crpbottom=0,crpright=0;
 int xp,yp,xwidth,yheight;

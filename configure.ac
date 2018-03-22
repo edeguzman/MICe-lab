@@ -1,7 +1,7 @@
 # Require autoconf 2.57 or newer.
 AC_PREREQ([2.57])
-AC_INIT([MICe-lab],[0.14],[Matthijs van Eede matthijs.vaneede@sickkids.ca])
-#foreign tells Automake that this package does not follow GNU standards.
+AC_INIT([MICe-lab],[0.14],[Nick Wang nick.wang@sickkids.ca])
+
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 AC_PROG_CC
 AC_PROG_CXX

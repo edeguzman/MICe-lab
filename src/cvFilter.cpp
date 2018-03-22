@@ -1,11 +1,8 @@
 #include <opencv2/opencv.hpp>
+#include <getopt.h>
 
 using namespace cv;
 using namespace std;
-
-//compile with: 
-// g++ cvFilter.cpp -o cvFilter -L/usr/local/lib -I/usr/local/include/opencv -L${exec_prefix}/lib -lopencv_shape -lopencv_stitching -lopencv_objdetect -lopencv_superres -lopencv_videostab -lopencv_calib3d -lopencv_features2d -lopencv_highgui -lopencv_videoio -lopencv_imgcodecs -lopencv_video -lopencv_photo -lopencv_ml -lopencv_imgproc -lopencv_flann -lopencv_viz -lopencv_core
-
 
 Mat genKernel_d2gauss(double filtwidth,int kernelwidth)
 {

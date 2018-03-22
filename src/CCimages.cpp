@@ -1,10 +1,8 @@
 #include <opencv2/opencv.hpp>
 #include <getopt.h>
+
 using namespace cv;
 using namespace std;
-
-//compile with: 
-// g++ -o CCimages CCimages.cpp -L/axiom2/projects/software/arch/linux-xenial-xerus/opencv/3.1.0/share/OpenCV/3rdparty/lib `pkg-config --cflags --libs opencv
 
 int search_cols=-1,search_rows=-1;
 int refx0,refy0,refx1,refy1;
