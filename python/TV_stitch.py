@@ -71,14 +71,14 @@ def gen_tempfile(descrip_str,ftype_str):
 
 def run_subprocess(cmdstr):
     if VERBOSE:
-        print cmdstr
+        print(cmdstr)
     p=subprocess.Popen(cmdstr,stdout=subprocess.PIPE,stdin=subprocess.PIPE,stderr=subprocess.PIPE,shell=True)
     p.wait()
     (out,err)=p.communicate()
     if not (err==''):
-        print err
+        print(err)
     if VERBOSE:
-        print out
+        print(out)
     return out
 
 def crop_img(infile,outfile,shavewidth=None,shaveheight=None,imgres='LORES',depth=None,im=False):
@@ -136,7 +136,7 @@ def TV_parameters(paramfile):
 numbers = re.compile(r'([0-9.]+)')
 def numericalSort(value):
     parts = numbers.split(value)
-    fileintvals = map(float, parts[1::2])
+    fileintvals = list(map(float, parts[1::2]))
     return fileintvals[-2]
 
 #def generate_gradcombined_images(infile,outfile,combineflag=True,im=False):
@@ -196,9 +196,9 @@ def generate_preprocessed_images(inputdirectory,starts=[None,None,None],ends=[No
     try:
         fulldirectorylist = glob.glob(inputdirectory+'-[0-9]*')
         if not fulldirectorylist:
-            raise FatalError, "Cannot find input directory(ies)."
-    except FatalError, e:
-        print 'Error(%s):' % program_name, e.msg
+            raise FatalError("Cannot find input directory(ies).")
+    except FatalError as e:
+        print('Error(%s):' % program_name, e.msg)
         raise SystemExit
     #refine and sort directory list
     direclist=[]
@@ -214,15 +214,15 @@ def generate_preprocessed_images(inputdirectory,starts=[None,None,None],ends=[No
     (N_x,N_y,N_z_slices,N_z_piezo) = (TVparamdict['mcolumns'],TVparamdict['mrows'],\
                                       TVparamdict['sections'],[1,TVparamdict['layers']][TVparamdict['Zscan']])
     if (len(direclist)!=N_z_slices):
-        print "Mismatch in Mosaic file 'sections' (%d) and number of identified directories (%d)"%(N_z_slices,len(direclist))
+        print("Mismatch in Mosaic file 'sections' (%d) and number of identified directories (%d)"%(N_z_slices,len(direclist)))
         N_z_slices=len(direclist)
         TVparamdict['sections']=N_z_slices
     try:
         globlist = glob.glob(direclist[0]+'/'+'*-*-*'+'_%02d.'%channelflag+imgftype)
         if (len(globlist)==0):
-            raise FatalError, "Cannot find files for the specified channel."
-    except FatalError, e:
-        print 'Error(%s):' % program_name, e.msg
+            raise FatalError("Cannot find files for the specified channel.")
+    except FatalError as e:
+        print('Error(%s):' % program_name, e.msg)
         raise SystemExit
     #due to weird behaviour of convert in crop_img for some images, force depth to match input (so it doesn't change)
     imgdepth = int( run_subprocess("identify -format \"%%z\" %s"%globlist[0]) )
@@ -236,14 +236,14 @@ def generate_preprocessed_images(inputdirectory,starts=[None,None,None],ends=[No
         globlist.sort(key=numericalSort)
         nfiles = len(globlist)
         if (nfiles!=N_x*N_y*N_z_piezo):
-            print "******************************************************************"
-            print "WARNING: Incorrect number of files identified in %s"%cname
-            print "******************************************************************"
+            print("******************************************************************")
+            print("WARNING: Incorrect number of files identified in %s"%cname)
+            print("******************************************************************")
             if (nfiles>N_x*N_y*N_z_piezo): nfiles=N_x*N_y*N_z_piezo
         if (nfiles/N_z_piezo!=TVparamdict['posarray'].shape[0]):
-            print "**************************************************************************"
-            print "WARNING: Inconsistent number of files (%d) for Mosaic position list (%d)"%(len(globlist),TVparamdict['posarray'].shape[0])
-            print "**************************************************************************"
+            print("**************************************************************************")
+            print("WARNING: Inconsistent number of files (%d) for Mosaic position list (%d)"%(len(globlist),TVparamdict['posarray'].shape[0]))
+            print("**************************************************************************")
             nfiles = min([nfiles,N_z_piezo*TVparamdict['posarray'].shape[0]])
         globlist=globlist[0:nfiles] #this line here only because sometimes TV errors generate extra files
         for k in range(nfiles):
@@ -254,7 +254,7 @@ def generate_preprocessed_images(inputdirectory,starts=[None,None,None],ends=[No
                 try:
                     reported_zpos = 0.001*TVparamdict['sectionres']*j + 0.001*2.0*TVparamdict['zres']*[0,k%N_z_piezo][N_z_piezo>1] #2X?
                 except IndexError:
-                    print k, cfile
+                    print(k, cfile)
                     raise SystemExit
             else:
                 zindex = j*N_z_piezo+1+[0,k/(N_x*N_y)][N_z_piezo>1]
@@ -481,7 +481,7 @@ def compute_offsets(TileList,overlapx=20.0,overlapy=15.0,Zref=-1,Cthresh=0.3,zse
         warray = where(less(warray,MIN_WEIGHT),MIN_WEIGHT,warray) 
         posfit,resids = weighted_linear_least_squares(Aarray,Barray,warray)
         if (isnan(posfit).any()):   #LSQ failed! This shouldn't happen
-            print "LSQ fail (Z %d)..."%currz
+            print("LSQ fail (Z %d)..."%currz)
             Aarray.tofile(TEMPDIRECTORY+"/"+"LSQfail_Aarray_Z%d"%currz)
             Barray.tofile(TEMPDIRECTORY+"/"+"LSQfail_Barray_Z%d"%currz)
             warray.tofile(TEMPDIRECTORY+"/"+"LSQfail_warray_Z%d"%currz)
@@ -536,7 +536,7 @@ def run_image_overlay(imglist,positions,outimg_size_x=None,outimg_size_y=None,ou
     return image_overlay_output
 
 def save_positions_to_file(TileList,outputfile):
-    print "Outputting %s...\n"%outputfile
+    print("Outputting %s...\n"%outputfile)
     fh=open(outputfile,'w')
     for j in range(len(TileList)):
         fh.write("%s (%d %d %d) (%f %f %f)\n"%(TileList[j].filename,\
@@ -547,7 +547,7 @@ def save_positions_to_file(TileList,outputfile):
     return 1
 
 def get_positions_from_file(TileList,positions_file):
-    print "Reading positions from file (%s)...\n"%positions_file
+    print("Reading positions from file (%s)...\n"%positions_file)
     fh=open(positions_file,'r')
     entries=fh.readlines()
     fh.close()
@@ -563,7 +563,7 @@ def get_positions_from_file(TileList,positions_file):
         if (matching_index>=0): 
             ctile.pixoffsetarray = array(positions[matching_index],float)
         else:
-            print "Failed to find matching coordinate indices for %s"%ctile.filename
+            print("Failed to find matching coordinate indices for %s"%ctile.filename)
     return 0
 
 def generate_mnc_file_from_tifstack(Zstacklist,outputfile,zstep=0.01,ystep=TV_LORES,xstep=TV_LORES,outdatatype="byte",Zcoordlist=None):
@@ -684,14 +684,13 @@ to come straight off the TissueVision system and undergo preprocessing.
     VERBOSE = options.verbose
 
     try:
-        if len(args)<2: raise FatalError, "Specify input directory and output file."
+        if len(args)<2: raise FatalError("Specify input directory and output file.")
         inputdirectory = args[-2]
         outputfile = args[-1]
         if not options.clobber and os.path.exists(outputfile):
-            raise FatalError, \
-               "The --clobber option is needed to overwrite an existing file."
-    except FatalError, e:
-        print 'Error(%s):' % program_name, e.msg
+            raise FatalError("The --clobber option is needed to overwrite an existing file.")
+    except FatalError as e:
+        print('Error(%s):' % program_name, e.msg)
         raise SystemExit
 
     if (options.use_temp!=None):
@@ -784,4 +783,4 @@ to come straight off the TissueVision system and undergo preprocessing.
     if (not options.keeptmp) and (options.use_temp==None):
         cmdout = run_subprocess("rm -r %s"%TEMPDIRECTORY)
     else:
-        print "Temp directory is: %s"%TEMPDIRECTORY
+        print("Temp directory is: %s"%TEMPDIRECTORY)
