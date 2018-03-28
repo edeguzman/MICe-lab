@@ -22,7 +22,7 @@ make install
 
 Python scripts:
 <pre><code>
-python3 setup.py install
+python3 python/setup.py install
 </pre></code>
 
 
