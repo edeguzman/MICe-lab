@@ -20,13 +20,13 @@ setup(name="MICe-lab",
         'matplotlib'
       ],
       dependency_links=['https://github.com/opencv/opencv/archive/3.1.0.tar.gz'],
-      packages=['python', 'python.saddle_recon', 'python.mri_python'],
-      scripts=['python/saddle_recon/saddle_recon.py',
-               'python/convert_CT_image.py',
-               'python/Snakefile',
-               'python/crop_to_brain.py',
-               'python/mri_python/mri_recon.py',
-               'python/mri_python/fse3dmice_recon.py',
-               'python/TV_stitch.py'
+      packages=['saddle_recon', 'mri_python','tissue_vision'],
+      scripts=['saddle_recon/saddle_recon.py',
+               'convert_CT_image.py',
+               'Snakefile',
+               'crop_to_brain.py',
+               'mri_python/mri_recon.py',
+               'mri_python/fse3dmice_recon.py',
+               'tissue_vision/TV_stitch.py'
                ],
       )
