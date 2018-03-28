@@ -15,10 +15,10 @@ import re
 import glob
 import numpy as N
 import zipimport
-from python.mri_python.recon_genfunctions import FatalError,get_dict_value,default_recon
-import python.mri_python.varian_read_file as vrf
-import python.mri_python.bruker_read_file as brf
-from python.mri_python.mnc_output import write_to_mnc_file
+from mri_python.recon_genfunctions import FatalError,get_dict_value,default_recon
+import mri_python.varian_read_file as vrf
+import mri_python.bruker_read_file as brf
+from mri_python.mnc_output import write_to_mnc_file
 
 program_name = 'mri_recon.py'
 DEFAULT_RECON_TYPE = 'seq_default'
