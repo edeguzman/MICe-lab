@@ -271,14 +271,21 @@ def generate_preprocessed_images(inputdirectory,starts=[None,None,None],ends=[No
     f_indextuple = lambda ctile: (ctile.indexarray[0],ctile.indexarray[1],ctile.indexarray[2])
     TileList.sort( key=f_indextuple )
     #now crop images, working only within specified start and end
+
     for j in range(len(TileList)):
         #skip to next image if outside desired start:end range
-        for k in range(3):
-            if (starts[k]!=None): #'<' not supported between 'int' and 'NoneType'
-                if (TileList[j].indexarray[k]<starts[k]): continue
-            if (ends[k]!=None):
-                if (TileList[j].indexarray[k]>ends[k]): continue
-
+        if (starts[0]!=None): #'<' not supported between 'int' and 'NoneType'
+            if (TileList[j].indexarray[0]<starts[0]): continue
+        if (starts[1]!=None):
+            if (TileList[j].indexarray[1]<starts[1]): continue
+        if (starts[2]!=None):
+            if (TileList[j].indexarray[2]<starts[2]): continue
+        if (ends[0]!=None):
+            if (TileList[j].indexarray[0]>ends[0]): continue
+        if (ends[1] != None):
+            if (TileList[j].indexarray[1]>ends[1]): continue
+        if (ends[2] != None):
+            if (TileList[j].indexarray[2]>ends[2]): continue
         #crop
         TileList[j].croppedfilename = gen_tempfile('Tile_Z%03d_Y%03d_X%03d'%(TileList[j].indexarray[0],\
                               TileList[j].indexarray[1],TileList[j].indexarray[2]),TileList[j].filename.split('.')[-1])
