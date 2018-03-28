@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 #
 # TV_stitch.py
 #
@@ -11,7 +11,6 @@ import string
 import os
 import subprocess
 import getopt
-import exceptions
 from optparse import OptionParser, Option, OptionValueError
 import re
 from numpy import *
@@ -19,7 +18,7 @@ from numpy.linalg import lstsq
 import glob
 import operator
 
-from Zstack_icorr import *
+from python.Zstack_icorr import *
 
 from scipy.stats import t
 
@@ -42,7 +41,7 @@ MIN_WEIGHT = 1e-3
 
 #----------------------------------------------------------------------------
 # define program specific exception
-class FatalError(exceptions.Exception):
+class FatalError(BaseException):
     def __init__(self,args=None):
         self.msg = args
 
@@ -274,12 +273,12 @@ def generate_preprocessed_images(inputdirectory,starts=[None,None,None],ends=[No
     #now crop images, working only within specified start and end
     for j in range(len(TileList)):
         #skip to next image if outside desired start:end range
-        if ((TileList[j].indexarray[0]<starts[0]) or 
-            (TileList[j].indexarray[1]<starts[1]) or 
-            (TileList[j].indexarray[2]<starts[2])): continue #(int)<None is False
-        if ( ((TileList[j].indexarray[0]>ends[0]) and (ends[0]!=None)) or \
-             ((TileList[j].indexarray[1]>ends[1]) and (ends[1]!=None)) or \
-             ((TileList[j].indexarray[2]>ends[2]) and (ends[2]!=None)) ): continue
+        for k in range(3):
+            if (starts[k]!=None): #'<' not supported between 'int' and 'NoneType'
+                if (TileList[j].indexarray[k]<starts[k]): continue
+            if (ends[k]!=None):
+                if (TileList[j].indexarray[k]>ends[k]): continue
+
         #crop
         TileList[j].croppedfilename = gen_tempfile('Tile_Z%03d_Y%03d_X%03d'%(TileList[j].indexarray[0],\
                               TileList[j].indexarray[1],TileList[j].indexarray[2]),TileList[j].filename.split('.')[-1])
