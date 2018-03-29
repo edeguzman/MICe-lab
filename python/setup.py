@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
 import sys
 
@@ -20,7 +20,7 @@ setup(name="MICe-lab",
         'matplotlib'
       ],
       dependency_links=['https://github.com/opencv/opencv/archive/3.1.0.tar.gz'],
-      packages=['saddle_recon', 'mri_python','tissue_vision'],
+      packages=find_packages(),
       scripts=['saddle_recon/saddle_recon.py',
                'convert_CT_image.py',
                'Snakefile',
