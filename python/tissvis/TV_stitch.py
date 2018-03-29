@@ -18,7 +18,7 @@ from numpy.linalg import lstsq
 import glob
 import operator
 
-from tissue_vision.Zstack_icorr import *
+from tissvis.Zstack_icorr import *
 
 from scipy.stats import t
 

@@ -23,8 +23,8 @@ from pydpiper.minc.files import MincAtom
 from pydpiper.minc.registration import get_resolution_from_file, registration_targets, lsq6_nuc_inorm
 from pydpiper.minc.registration import RegistrationTargets
 
-from saddle_recon.reconstruction import varian_recon_ge3dmice_saddle, dist_corr_saddle, crop_to_brain
-from saddle_recon.arguments      import varian_recon_parser, crop_to_brain_parser
+from saddre.reconstruction import varian_recon_ge3dmice_saddle, dist_corr_saddle, crop_to_brain
+from saddre.arguments      import varian_recon_parser, crop_to_brain_parser
 
 def saddle_recon_pipeline(options):
 
@@ -119,7 +119,7 @@ def saddle_recon_pipeline(options):
 
 saddle_recon_parser = CompoundParser([varian_recon_parser,lsq6_parser,crop_to_brain_parser])
 
-saddle_recon_application = mk_application(parsers=[AnnotatedParser(parser=saddle_recon_parser, namespace='saddle_recon')], pipeline=saddle_recon_pipeline)
+saddle_recon_application = mk_application(parsers=[AnnotatedParser(parser=saddle_recon_parser, namespace='saddre')], pipeline=saddle_recon_pipeline)
 
 if __name__ == "__main__":
     saddle_recon_application()
