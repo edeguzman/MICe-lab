@@ -74,8 +74,9 @@ def run_subprocess(cmdstr):
     p=subprocess.Popen(cmdstr,stdout=subprocess.PIPE,stdin=subprocess.PIPE,stderr=subprocess.PIPE,shell=True)
     p.wait()
     (out,err)=p.communicate()
-    if not (err==''):
-        print(err)
+    out=out.decode()
+    if p.wait() != 0:
+        print(err.decode())
     if VERBOSE:
         print(out)
     return out
@@ -504,8 +505,8 @@ def run_CCimages(img_list,search_width=200,search_height=200,xoff=0.0,yoff=0.0,t
     if (CCvsback):
         cmdstr += " -n"
     cmdout = run_subprocess(cmdstr)
-    #assume output from CCimages of form: Imean=0.196748, offset_x=691, offset_y=5, CC=0.044111 
-    numlist=re.findall(r'=[ 0-9-.]+',cmdout)  
+    #assume output from CCimages of form: Imean=0.196748, offset_x=691, offset_y=5, CC=0.044111
+    numlist=re.findall(r'=[ 0-9-.]+',cmdout)
     Imean=float(numlist[0][1:])
     xoffnew=int(numlist[1][1:])
     yoffnew=int(numlist[2][1:])
