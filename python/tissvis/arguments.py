@@ -20,10 +20,11 @@ def _mk_TV_stitch_parser():
 
 TVSTITCHConf = NamedTuple('TVSTITCHConf', [('hello_world', bool),
                                                  ('tif_input_directory', str),
-                                                 ('skip_tile_match', bool),
-                             )
+                                                 ('skip_tile_match', bool)]
+                          )
 
 def to_TV_stitch_conf(TV_stitch_args : Namespace) -> TVSTITCHConf:
     return TVSTITCHConf(**TV_stitch_args.__dict__)
 
-TV_stitch_parser = AnnotatedParser(parser=BaseParser(_mk_TV_stitch_parser(), "TV_stitch"), namespace="TV_stitch", cast=to_TV_stitch_conf)
+TV_stitch_parser = AnnotatedParser(parser=BaseParser(_mk_TV_stitch_parser(), "TV_stitch"),
+                                   namespace="TV_stitch", cast=to_TV_stitch_conf)

@@ -39,7 +39,8 @@ def saddle_recon_pipeline(options):
     # TODO check that all mandatory inputs are provided
     #Make list of input fid files, with location, and create a "FileAtom" type
     varian_fid_files = [fid_input_dir + "/fid" + str(num_fid) for num_fid in range(0,options.saddle_recon.varian_recon.num_fids)]
-    fids = [FileAtom(name) for name in varian_fid_files]
+    fids = [FileAtom(name) for name
+            in varian_fid_files]
 
     # Varian recon will spit out images of the format <output_file_name>.<coil#>.<rep#>.mnc
     # TODO If .mnc isn't provided at the end of the output_file_name, then there is no "." before the coil number. Need to check and correct for this.
