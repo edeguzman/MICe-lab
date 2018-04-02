@@ -347,7 +347,7 @@ def compute_offsets(TileList,overlapx=20.0,overlapy=15.0,Zref=-1,Cthresh=0.3,zse
     matX=int(cmdout.split()[0]); matY=int(cmdout.split()[1])
     uniqueZ = unique([ctile.indexarray[0] for ctile in TileList])
     Nz = uniqueZ.shape[-1]
-    if (Zref<0): Zref=Nz/2                            #start in middle and work out by default (should really make this data driven)
+    if (Zref<0): Zref=Nz//2                            #start in middle and work out by default (should really make this data driven)
     else: Zref-=1                                     #subtract 1 for 0 vs 1 based indexing
     sorted_uniqueZ = empty( (Nz,) , int)
     sorted_uniqueZ[0:Nz-Zref] = uniqueZ[-(Nz-Zref):]
