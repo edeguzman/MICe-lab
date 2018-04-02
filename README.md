@@ -22,6 +22,7 @@ make install
 
 Python scripts:
 <pre><code>
+cd python
 python3 setup.py install
 </pre></code>
 
