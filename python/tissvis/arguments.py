@@ -5,7 +5,6 @@ from pydpiper.core.arguments import BaseParser, AnnotatedParser
 def _mk_TV_stitch_parser():
     p = ArgParser(add_help=False)
     p.add_argument("--skip-tile-match", dest="skip_tile_match",
-                   type=bool,
                    action="store_true", default=False,
                    help="Skip tile matching and place tiles on perfect grid (for debugging)")
     p.add_argument("--scale-output", dest="scale_output",
