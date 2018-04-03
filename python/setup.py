@@ -27,6 +27,7 @@ setup(name="MICe-lab",
                'crop_to_brain.py',
                'mri_python/mri_recon.py',
                'mri_python/fse3dmice_recon.py',
-               'tissvis/TV_stitch.py'
+               'tissvis/TV_stitch.py',
+	       'tissvis/tissue_vision.py'
                ],
       )

@@ -115,12 +115,14 @@ def saddle_recon_pipeline(options):
                                             crop_to_brain_options=options.saddle_recon.crop_to_brain))
         all_crop_results.append(crop_result)
 
-    return Result(stages=s, output=Namespace(varian_output=varian_recon_results,lsq6_output=all_lsq6_results,dc_output=all_dc_results,crop_output=all_crop_results))
+    return Result(stages=s, output=Namespace(varian_output=varian_recon_results,lsq6_output=all_lsq6_results,
+                                             dc_output=all_dc_results,crop_output=all_crop_results))
 
 
 saddle_recon_parser = CompoundParser([varian_recon_parser,lsq6_parser,crop_to_brain_parser])
 
-saddle_recon_application = mk_application(parsers=[AnnotatedParser(parser=saddle_recon_parser, namespace='saddre')], pipeline=saddle_recon_pipeline)
+saddle_recon_application = mk_application(parsers=[AnnotatedParser(parser=saddle_recon_parser, namespace='saddle_recon')],
+                                          pipeline=saddle_recon_pipeline)
 
 if __name__ == "__main__":
     saddle_recon_application()
