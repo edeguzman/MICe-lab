@@ -32,7 +32,7 @@ def _mk_TV_stitch_parser():
 
 TVSTITCHConf = NamedTuple('TVSTITCHConf', [
     ('skip_tile_match', bool),
-    ('scale_putput', int),
+    ('scale_output', int),
     ('Zstart', int),
     ('Zend', int),
     ('top_level_input_directory', str),
