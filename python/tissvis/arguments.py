@@ -23,27 +23,27 @@ def _mk_TV_stitch_parser():
                    type=str,
                    default='.',
                    help="Top level directory where folders containing tifs for each slice are contained")
-    p.add_argument("--name", dest="name",
+    p.add_argument("--brain", dest="brain",
                    type=str,
                    default=None,
                    help="Name of the brain")
     return p
 
-
-TVSTITCHConf = NamedTuple('TVSTITCHConf', [
-    ('skip_tile_match', bool),
-    ('scale_output', int),
-    ('Zstart', int),
-    ('Zend', int),
-    ('top_level_input_directory', str),
-    ('slice_output_directory', str),
-    ('name', str)
-])
-
-
-def to_TV_stitch_conf(TV_stitch_args: Namespace) -> TVSTITCHConf:
-    return TVSTITCHConf(**TV_stitch_args.__dict__)
+# TODO figure out with this with "cast=to_TV_stitch_conf" gives ValueError. Code can run without this though.
+# TVSTITCHConf = NamedTuple('TVSTITCHConf', [
+#     ('skip_tile_match', bool),
+#     ('scale_output', int),
+#     ('Zstart', int),
+#     ('Zend', int),
+#     ('top_level_input_directory', str),
+#     ('slice_output_directory', str),
+#     ('brain', str)
+# ])
+#
+#
+# def to_TV_stitch_conf(TV_stitch_args: Namespace) -> TVSTITCHConf:
+#     return TVSTITCHConf(**TV_stitch_args.__dict__)
 
 
 TV_stitch_parser = AnnotatedParser(parser=BaseParser(_mk_TV_stitch_parser(), "TV_stitch"),
-                                   namespace="TV_stitch", cast=to_TV_stitch_conf)
+                                   namespace="TV_stitch") #, cast=to_TV_stitch_conf)

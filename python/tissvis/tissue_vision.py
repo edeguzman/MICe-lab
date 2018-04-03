@@ -17,8 +17,8 @@ def TV_stitch_cmd(TV_stitch_options, output_dir: str):
                           '--scaleoutput' if TV_stitch_options.scaleoutput else '',
                           '--Zstart', TV_stitch_options.Zstart,
                           '--Zend', TV_stitch_options.Zend,
-                          os.path.join(TV_stitch_options.top_level_input_directory, TV_stitch_options.name),
-                          os.path.join(output_dir, TV_stitch_options.name)])
+                          os.path.join(TV_stitch_options.top_level_input_directory, TV_stitch_options.brain),
+                          os.path.join(output_dir, TV_stitch_options.brain)])
     print(stage.render())
     stage.set_log_file(log_file_name=os.path.join(output_dir, "tissvis.log"))
 
