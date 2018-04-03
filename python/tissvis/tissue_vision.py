@@ -28,7 +28,7 @@ def TV_stitch_cmd(TV_stitch_options, output_dir: str):
 def tissue_vision_pipeline(options):
     output_dir = options.application.output_directory
     pipeline_name = options.application.pipeline_name
-    top_level_input_dir = options.tissue_vision.TV_stitch.top_level_input_dir
+    top_level_input_dir = options.tissue_vision.TV_stitch.top_level_input_directory
     slice_output_dir = options.tissue_vision.TV_stitch.slice_output_directory
     s = Stages()
 

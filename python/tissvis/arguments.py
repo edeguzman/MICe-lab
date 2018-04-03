@@ -36,6 +36,7 @@ TVSTITCHConf = NamedTuple('TVSTITCHConf', [
     ('Zstart', int),
     ('Zend', int),
     ('top_level_input_directory', str),
+    ('slice_output_directory', str),
     ('name', str)
 ])
 
