@@ -62,7 +62,8 @@ VARIANRECONConf = NamedTuple('VARIANRECONConf', [('fid_input_directory', str),
 def to_varian_recon_conf(varian_recon_args : Namespace) -> VARIANRECONConf:
     return VARIANRECONConf(**varian_recon_args.__dict__)
 
-varian_recon_parser = AnnotatedParser(parser=BaseParser(_mk_varian_recon_parser(), "varian_recon"), namespace="varian_recon", cast=to_varian_recon_conf)
+varian_recon_parser = AnnotatedParser(parser=BaseParser(_mk_varian_recon_parser(), "varian_recon"),
+                                      namespace="varian_recon", cast=to_varian_recon_conf)
 
 def _mk_crop_to_brain_parser():
     p = ArgParser(add_help=False)

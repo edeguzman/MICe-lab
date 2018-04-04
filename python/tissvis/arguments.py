@@ -9,7 +9,7 @@ def _mk_TV_stitch_parser():
                    help="Skip tile matching and place tiles on perfect grid (for debugging)")
     p.add_argument("--scale-output", dest="scale_output",
                    type=int,
-                   default=None,  # TODO raise an error when this isn't specified
+                   default=None,  # TODO raise a warning when this isn't specified
                    help="Multiply slice images by this value before saving to file")
     p.add_argument("--Zstart", dest="Zstart",
                    type=int,

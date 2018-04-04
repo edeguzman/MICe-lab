@@ -14,7 +14,7 @@ def TV_stitch_cmd(TV_stitch_options, output_dir: str):
                      cmd=['TV_stitch.py',
                           # TODO if app                       '--verbose' if TV_stitch_options.verbose else '',
                           '--skip_tile_match' if TV_stitch_options.skip_tile_match else '',
-                          '--scaleoutput' if TV_stitch_options.scaleoutput else '',
+                          '--scale-output %s' % TV_stitch_options.scale_output if TV_stitch_options.scale_output else '',
                           '--Zstart', TV_stitch_options.Zstart,
                           '--Zend', TV_stitch_options.Zend,
                           os.path.join(TV_stitch_options.top_level_input_directory, TV_stitch_options.brain),
@@ -24,12 +24,11 @@ def TV_stitch_cmd(TV_stitch_options, output_dir: str):
 
     return Result(stages=Stages([stage]), output=())
 
-
 def tissue_vision_pipeline(options):
     output_dir = options.application.output_directory
     pipeline_name = options.application.pipeline_name
     top_level_input_dir = options.tissue_vision.TV_stitch.top_level_input_directory
-    slice_output_dir = options.tissue_vision.TV_stitch.slice_output_directory
+    #TODO slice_output_dir = options.tissue_vision.TV_stitch.slice_output_directory
     s = Stages()
 
     #############################
@@ -38,6 +37,11 @@ def tissue_vision_pipeline(options):
     TV_stitch_results = s.defer(TV_stitch_cmd(TV_stitch_options=options.tissue_vision.TV_stitch, output_dir=output_dir))
 
     return Result(stages=s, output=Namespace(TV_stitch_output=TV_stitch_results, ))
+
+
+#############################
+# Combine Parser & Make Application
+#############################
 
 tissue_vision_parser = CompoundParser([TV_stitch_parser])
 
@@ -50,4 +54,5 @@ tissue_vision_application = mk_application(
 #############################
 
 if __name__ == "__main__":
+    #import pdb; pdb.set_trace()
     tissue_vision_application()
