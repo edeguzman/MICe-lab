@@ -14,7 +14,7 @@ def TV_stitch_cmd(TV_stitch_options, output_dir: str):
                      cmd=['TV_stitch.py',
                           # TODO if app                       '--verbose' if TV_stitch_options.verbose else '',
                           '--skip_tile_match' if TV_stitch_options.skip_tile_match else '',
-                          '--scale-output %s' % TV_stitch_options.scale_output if TV_stitch_options.scale_output else '',
+                          '--scaleoutput %s' % TV_stitch_options.scale_output if TV_stitch_options.scale_output else '',
                           '--Zstart', TV_stitch_options.Zstart,
                           '--Zend', TV_stitch_options.Zend,
                           os.path.join(TV_stitch_options.top_level_input_directory, TV_stitch_options.brain),
@@ -54,5 +54,4 @@ tissue_vision_application = mk_application(
 #############################
 
 if __name__ == "__main__":
-    #import pdb; pdb.set_trace()
     tissue_vision_application()
