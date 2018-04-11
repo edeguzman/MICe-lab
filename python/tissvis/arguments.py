@@ -19,6 +19,22 @@ def _mk_TV_stitch_parser():
                    type=int,
                    default=None,
                    help="Z end index")
+    p.add_argument("--Ystart", dest="Ystart",
+                   type=int,
+                   default=None,
+                   help="Y start index")
+    p.add_argument("--Yend", dest="Yend",
+                   type=int,
+                   default=None,
+                   help="Y end index")
+    p.add_argument("--Xstart", dest="Xstart",
+                   type=int,
+                   default=None,
+                   help="X start index")
+    p.add_argument("--Xend", dest="Xend",
+                   type=int,
+                   default=None,
+                   help="X end index")
     p.add_argument("--top-level-input-directory", dest="top_level_input_directory",
                    type=str,
                    default='.',
@@ -27,6 +43,46 @@ def _mk_TV_stitch_parser():
                    type=str,
                    default=None,
                    help="Name of the brain")
+    p.add_argument("--no-gradient-image", dest="no_gradient_image",
+                   action="store_true", default=False,
+                   help="Do not use gradient and raw image combined for correlation")
+    p.add_argument("--save-positions-file", dest="save_positions_file",
+                   type=str,
+                   default=None,
+                   help="Save the final positions to file (for subsequent use with --use-positions-file)")
+    p.add_argument("--use-positions-file", dest="use_positions_file",
+                   type=str,
+                   default=None,
+                   help="Use an existing positions file instead of generation positions from the input")
+    p.add_argument("--overlapx", dest="overlapx",
+                   type=int,
+                   default=None,
+                   help="% tile overlap in x direction")
+    p.add_argument("--overlapy", dest="overlapy",
+                   type=int,
+                   default=None,
+                   help="% tile overlap in y direction")
+    p.add_argument("--channel", dest="channel",
+                   type=str,
+                   default=None,
+                   help="channel to stitch")
+    p.add_argument("--Zref", dest="Zref",
+                   type=int,
+                   default=None,
+                   help="Z plane reference during tiling")
+    p.add_argument("--inormalize-piezo-stack", dest="inormalize_piezo_stack",
+                   action="store_true", default=False,
+                   help="Intensity normalize piezo stacked images")
+    p.add_argument("--fast-piezo", dest="fast_piezo",
+                   action="store_true", default=False,
+                   help="Piezo stack tiles are stored consecutively instead of plane-wise")
+    p.add_argument("--short-int", dest="short_int",
+                   action="store_true", default=False,
+                   help="Write short int data to file instead of byte")
+    p.add_argument("--use-imagemagick", dest="use_imagemagick",
+                   action="store_true", default=False,
+                   help="Use imagemagick for preprocessing (old behaviour)")
+
     return p
 
 # TODO figure out with this with "cast=to_TV_stitch_conf" gives ValueError. Code can run without this though.
