@@ -11,7 +11,7 @@ from tissvis.arguments import TV_stitch_parser
 
 def TV_stitch_cmd(TV_stitch_options, output_dir: str):
     stage = CmdStage(inputs=(), outputs=(),
-                     cmd=['TV_stitch.py', '-clobber', '-keeptmp',
+                     cmd=['TV_stitch.py', '--clobber', '--keeptmp',
                           # TODO if app                       '--verbose' if TV_stitch_options.verbose else '',
                           '--skip_tile_match' if TV_stitch_options.skip_tile_match else '',
                           '--scaleoutput %s' % TV_stitch_options.scale_output if TV_stitch_options.scale_output else '',
