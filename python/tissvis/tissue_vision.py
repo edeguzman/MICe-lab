@@ -37,8 +37,7 @@ def TV_stitch_cmd(application_options, TV_stitch_options, output_dir: str):
                           #'--TV_file_type %s' % TV_stitch_options.use_positions_file if TV_stitch_options.use_positions_file el
                           '--use_IM' if TV_stitch_options.use_imagemagick else '',
                           os.path.join(TV_stitch_options.top_level_input_directory, TV_stitch_options.brain),
-                          os.path.join(output_dir, TV_stitch_options.brain),
-                          '>> %s/%s_TV_stitch.log' % (output_dir, application_options.pipeline_name)])
+                          os.path.join(output_dir, TV_stitch_options.brain)])
     print(stage.render())
     stage.set_log_file(log_file_name=os.path.join(output_dir, "tissvis.log"))
 
