@@ -28,6 +28,7 @@ setup(name="MICe-lab",
                'mri_python/mri_recon.py',
                'mri_python/fse3dmice_recon.py',
                'tissvis/TV_stitch.py',
-	       'tissvis/tissue_vision.py'
+	           'tissvis/tissue_vision.py',
+               'tissvis/cellprofiler.py'
                ],
       )
