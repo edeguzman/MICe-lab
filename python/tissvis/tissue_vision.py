@@ -9,7 +9,7 @@ from pydpiper.execution.application import mk_application
 
 from tissvis.arguments import TV_stitch_parser
 
-def TV_stitch_cmd(application_options, TV_stitch_options, output_dir: str):
+def TV_stitch_cmd(application_options, TV_stitch_options, output_dir: str, env_vars):
     stage = CmdStage(inputs=(), outputs=(),
                      cmd=['TV_stitch.py', '--clobber', '--keeptmp',
                           '--verbose' if application_options.verbose else '',
@@ -37,7 +37,8 @@ def TV_stitch_cmd(application_options, TV_stitch_options, output_dir: str):
                           #'--TV_file_type %s' % TV_stitch_options.use_positions_file if TV_stitch_options.use_positions_file el
                           '--use_IM' if TV_stitch_options.use_imagemagick else '',
                           os.path.join(TV_stitch_options.top_level_input_directory, TV_stitch_options.brain),
-                          os.path.join(output_dir, TV_stitch_options.brain)])
+                          os.path.join(output_dir, TV_stitch_options.brain)],
+                     env_vars=env_vars)
     print(stage.render())
     stage.set_log_file(log_file_name=os.path.join(output_dir, "tissvis.log"))
 
@@ -53,8 +54,11 @@ def tissue_vision_pipeline(options):
     #############################
     # Step 1: Run TV_stitch.py
     #############################
+    env_vars={}
+    env_vars['PYTHONPATH']=os.environ['PYTHONPATH'] \
+                #+':/axiom2/projects/software/arch/linux-xenial-xerus/CellProfiler/3.0.0-3217d28/lib/python2.7'
     TV_stitch_results = s.defer(TV_stitch_cmd(application_options=options.application, \
-            TV_stitch_options=options.tissue_vision.TV_stitch, output_dir=output_dir))
+            TV_stitch_options=options.tissue_vision.TV_stitch, output_dir=output_dir, env_vars=env_vars))
 
     return Result(stages=s, output=Namespace(TV_stitch_output=TV_stitch_results, ))
 
