@@ -40,7 +40,6 @@ def TV_stitch_cmd(application_options, TV_stitch_options, output_dir: str, env_v
                           os.path.join(output_dir, TV_stitch_options.brain)],
                      env_vars=env_vars)
     print(stage.render())
-    stage.set_log_file(log_file_name=os.path.join(output_dir, "tissvis.log"))
 
     return Result(stages=Stages([stage]), output=())
 
