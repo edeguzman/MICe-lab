@@ -56,7 +56,7 @@ def tissue_vision_pipeline(options):
     #############################
     env_vars={}
     env_vars['PYTHONPATH']=os.environ['PYTHONPATH'] \
-                #+':/axiom2/projects/software/arch/linux-xenial-xerus/CellProfiler/3.0.0-3217d28/lib/python2.7'
+                +':/NEW/ENVIRONMENT/APPENDED/TO/PYTHONPATH'
     TV_stitch_results = s.defer(TV_stitch_cmd(application_options=options.application, \
             TV_stitch_options=options.tissue_vision.TV_stitch, output_dir=output_dir, env_vars=env_vars))
 

@@ -1,4 +1,4 @@
-import os; print('os.environ["PYTHONPATH"]')
+import os; print(os.environ["PYTHONPATH"] + '\n')
 #!/usr/bin/env python3
 #
 # TV_stitch.py
