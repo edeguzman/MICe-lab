@@ -78,8 +78,6 @@ cellprofiler_application = mk_application(
 if __name__ == "__main__":
     cellprofiler_application()
 
-# cellprofiler -p /hpf/largeprojects/MICe/nwang/Salter_Microglia_2x2x2/FindMicroglia_Gauss.cppipe \
-# -i /hpf/largeprojects/MICe/nwang/Salter_Microglia_2x2x2/Salter_Microglia_GFP_SM1_28Feb13_2x2x2/ \
-#  -o /hpf/largeprojects/MICe/nwang/Salter_Microglia_2x2x2/cellprofiler/ -c -r
-#
+# cellprofiler -p /hpf/largeprojects/MICe/nwang/Salter_Microglia_2x2x2/FindMicroglia_Gauss.cppipe -i /hpf/largeprojects/MICe/nwang/Salter_Microglia_2x2x2/Salter_Microglia_GFP_SM1_28Feb13_2x2x2/ -o /hpf/largeprojects/MICe/nwang/Salter_Microglia_2x2x2/cellprofiler/ -c -r
+
 # cellprofiler -p /hpf/largeprojects/MICe/nwang/Salter_Microglia_2x2x2/cellprofiler/Batch_data.h5 -c -r -f 1 -l 1

@@ -1,13 +1,12 @@
 #!/usr/bin/env python
 
 from pyminc.volumes.factory import *
-import numpy as n
+import numpy as np
 import scipy.misc
 import scipy.interpolate
 import scipy.ndimage
 from optparse import OptionParser, OptionGroup
 
-import numpy as n
 import scipy.interpolate
 import scipy.ndimage
 
@@ -38,38 +37,38 @@ def congrid(a, newdims, method='linear', centre=False, minusone=False):
     True - inarray is resampled by(i-1)/(x-1) * (j-1)/(y-1)
     This prevents extrapolation one element beyond bounds of input array.
     '''
-    if not a.dtype in [n.float64, n.float32]:
-        a = n.cast[float](a)
+    if not a.dtype in [np.float64, np.float32]:
+        a = np.cast[float](a)
 
-    m1 = n.cast[int](minusone)
-    ofs = n.cast[int](centre) * 0.5
-    old = n.array( a.shape )
+    m1 = np.cast[int](minusone)
+    ofs = np.cast[int](centre) * 0.5
+    old = np.array( a.shape )
     ndims = len( a.shape )
     if len( newdims ) != ndims:
         print "[congrid] dimensions error. " \
               "This routine currently only support " \
               "rebinning to the same number of dimensions."
         return None
-    newdims = n.asarray( newdims, dtype=float )
+    newdims = np.asarray( newdims, dtype=float )
     dimlist = []
 
     if method == 'neighbour':
         for i in range( ndims ):
-            base = n.indices(newdims)[i]
+            base = np.indices(newdims)[i]
             dimlist.append( (old[i] - m1) / (newdims[i] - m1) \
                             * (base + ofs) - ofs )
-        cd = n.array( dimlist ).round().astype(int)
+        cd = np.array( dimlist ).round().astype(int)
         newa = a[list( cd )]
         return newa
 
     elif method in ['nearest','linear']:
         # calculate new dims
         for i in range( ndims ):
-            base = n.arange( newdims[i] )
+            base = np.arange( newdims[i] )
             dimlist.append( (old[i] - m1) / (newdims[i] - m1) \
                             * (base + ofs) - ofs )
         # specify old dims
-        olddims = [n.arange(i, dtype = n.float) for i in list( a.shape )]
+        olddims = [np.arange(i, dtype = np.float) for i in list( a.shape )]
 
         # first interpolation - for ndims = any
         mint = scipy.interpolate.interp1d( olddims[-1], a, kind=method )
@@ -89,11 +88,11 @@ def congrid(a, newdims, method='linear', centre=False, minusone=False):
         return newa
     elif method in ['spline']:
         oslices = [ slice(0,j) for j in old ]
-        oldcoords = n.ogrid[oslices]
+        oldcoords = np.ogrid[oslices]
         nslices = [ slice(0,j) for j in list(newdims) ]
-        newcoords = n.mgrid[nslices]
+        newcoords = np.mgrid[nslices]
 
-        newcoords_dims = range(n.rank(newcoords))
+        newcoords_dims = range(np.rank(newcoords))
         #make first index last
         newcoords_dims.append(newcoords_dims.pop(0))
         newcoords_tr = newcoords.transpose(newcoords_dims)
@@ -101,7 +100,7 @@ def congrid(a, newdims, method='linear', centre=False, minusone=False):
 
         newcoords_tr += ofs
 
-        deltas = (n.asarray(old) - m1) / (newdims - m1)
+        deltas = (np.asarray(old) - m1) / (newdims - m1)
         newcoords_tr *= deltas
 
         newcoords_tr -= ofs
@@ -202,10 +201,10 @@ if __name__ == "__main__":
     n_slices = len(args)
     # need to know the size of the output slices - read in a single slice
     test_slice = scipy.misc.imread(args[0])
-    slice_shape = n.array(test_slice.shape)
+    slice_shape = np.array(test_slice.shape)
     size_fraction = options.input_resolution / options.output_resolution
-    output_size = n.ceil(slice_shape * size_fraction).astype('int')
-    filter_size = n.ceil(slice_shape[0] / output_size[0])
+    output_size = np.ceil(slice_shape * size_fraction).astype('int')
+    filter_size = np.ceil(slice_shape[0] / output_size[0])
 
     vol = volumeFromDescription(output_filename, 
                                 options.dimorder,
@@ -220,7 +219,7 @@ if __name__ == "__main__":
         imslice = scipy.misc.imread(args[i])
 
         # normalize slice to lie between 0 and 1
-        original_type_max = n.iinfo(imslice.dtype).max
+        original_type_max = np.iinfo(imslice.dtype).max
         imslice = imslice.astype('float')
         imslice = imslice / original_type_max
 
@@ -233,6 +232,8 @@ if __name__ == "__main__":
             imslice = imslice * filter_size * filter_size
 
         # downsample the slice
+        #VisibleDeprecationWarning occurs here
+        import pdb; pdb.set_trace()
         o_imslice = congrid(imslice, output_size, 'neighbour')
         # add the downsampled slice to the volume
         vol.data[i,:,:] = o_imslice
