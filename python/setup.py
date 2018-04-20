@@ -31,6 +31,6 @@ setup(name="MICe-lab",
                #TODO remove these once the entire pipeline is completed
                'tissvis/TV_stitch.py',
                'tissvis/cellprofiler.py',
-               'tissvis/stack.py'
+               'tissvis/tile_stack.py'
                ],
       )
