@@ -193,7 +193,7 @@ if __name__ == "__main__":
 
     parser.add_option_group(dim_group)
 
-    (options, args) = parser.parse_args()
+    options, args = parser.parse_args()
     
     # construct volume
     # need to know the number of slices
@@ -233,7 +233,6 @@ if __name__ == "__main__":
 
         # downsample the slice
         #VisibleDeprecationWarning occurs here
-        import pdb; pdb.set_trace()
         o_imslice = congrid(imslice, output_size, 'neighbour')
         # add the downsampled slice to the volume
         vol.data[i,:,:] = o_imslice
