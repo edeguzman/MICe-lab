@@ -100,6 +100,41 @@ def _mk_TV_stitch_parser():
 # def to_TV_stitch_conf(TV_stitch_args: Namespace) -> TVSTITCHConf:
 #     return TVSTITCHConf(**TV_stitch_args.__dict__)
 
-
 TV_stitch_parser = AnnotatedParser(parser=BaseParser(_mk_TV_stitch_parser(), "TV_stitch"),
                                    namespace="TV_stitch") #, cast=to_TV_stitch_conf)
+
+def _mk_cellprofiler_parser():
+    p = ArgParser(add_help=False)
+    p.add_argument("--cellprofiler-pipeline", dest="cellprofiler_pipeline",
+                   type=str,
+                   default=None,
+                   help="Load this pipeline file or project on startup")
+    p.add_argument("--image-directory", dest="image_directory",
+                   type=str,
+                   default=None,
+                   help="Make this directory the default input folder")
+    p.add_argument("--output-directory", dest="output_directory",
+                   type=str,
+                   default=None,
+                   help="Make this directory the default output folder")
+    p.add_argument("--first-image-set", dest="first_image_set",
+                   type=int,
+                   default=None,
+                   help="The one-based index of the first image set to process")
+    p.add_argument("--last-image-set", dest="last_image_set",
+                   type=int,
+                   default=None,
+                   help="The one-based index of the last image set to process")
+    p.add_argument("--python2-path", dest="python2_path",
+                   type=str,
+                   default=None,
+                   help="Set your PYTHONPATH environment variable for cellprofiler using this flag.")
+    p.add_argument("--java-home", dest="java_home",
+                   type=str,
+                   default=None,
+                   help="Set your JAVA_HOME environment variable for cellprofiler using this flag.")
+    return p
+
+cellprofiler_parser = AnnotatedParser(parser=BaseParser(_mk_cellprofiler_parser(), "cellprofiler"),
+                                      namespace="cellprofiler")
+#lsq6_parser = AnnotatedParser(parser=BaseParser(_mk_lsq6_parser(), "LSQ6"), namespace="lsq6", cast=to_lsq6_conf)
