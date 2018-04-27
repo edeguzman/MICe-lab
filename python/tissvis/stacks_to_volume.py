@@ -232,7 +232,6 @@ if __name__ == "__main__":
             imslice = imslice * filter_size * filter_size
 
         # downsample the slice
-        #VisibleDeprecationWarning occurs here
         o_imslice = congrid(imslice, output_size, 'neighbour')
         # add the downsampled slice to the volume
         vol.data[i,:,:] = o_imslice
