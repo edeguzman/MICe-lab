@@ -9,8 +9,8 @@ from pydpiper.execution.application import mk_application
 
 from tissvis.arguments import TV_stitch_parser
 
-def TV_stitch_cmd(application_options, TV_stitch_options, output_dir: str):
-    stage = CmdStage(inputs=(), outputs=(),
+def TV_stitch_cmd(application_options, TV_stitch_options, slice_dir: str):
+    stage = CmdStage(inputs=(tiles), outputs=(slices),
                      cmd=['TV_stitch.py', '--clobber', '--keeptmp',
                           '--verbose' if application_options.verbose else '',
                           '--skip_tile_match' if TV_stitch_options.skip_tile_match else '',
@@ -37,25 +37,28 @@ def TV_stitch_cmd(application_options, TV_stitch_options, output_dir: str):
                           #'--TV_file_type %s' % TV_stitch_options.use_positions_file if TV_stitch_options.use_positions_file el
                           '--use_IM' if TV_stitch_options.use_imagemagick else '',
                           os.path.join(TV_stitch_options.top_level_input_directory, TV_stitch_options.brain),
-                          os.path.join(output_dir, TV_stitch_options.brain)])
+                          os.path.join(slice_dir, TV_stitch_options.brain)])
     print(stage.render())
     #TODO since CmdStage.output==None, this line is needed for now...
-    stage.set_log_file(log_file_name=os.path.join(output_dir, "tissvis.log"))
+    stage.set_log_file(log_file_name=os.path.join(slice_dir, "tissvis.log"))
 
     return Result(stages=Stages([stage]), output=())
 
 def tissue_vision_pipeline(options):
     output_dir = options.application.output_directory
     pipeline_name = options.application.pipeline_name
-    top_level_input_dir = options.tissue_vision.TV_stitch.top_level_input_directory
+
     #TODO slice_output_dir = options.tissue_vision.TV_stitch.slice_output_directory
+
+    slice_dir = os.path.join(output_dir, pipeline_name + "_slice")
+
     s = Stages()
 
     #############################
     # Step 1: Run TV_stitch.py
     #############################
     TV_stitch_results = s.defer(TV_stitch_cmd(application_options=options.application, \
-            TV_stitch_options=options.tissue_vision.TV_stitch, output_dir=output_dir))
+            TV_stitch_options=options.tissue_vision.TV_stitch, slice_dir=slice_dir))
 
     return Result(stages=s, output=Namespace(TV_stitch_output=TV_stitch_results, ))
 

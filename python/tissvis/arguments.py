@@ -144,34 +144,26 @@ cellprofiler_parser = AnnotatedParser(parser=BaseParser(_mk_cellprofiler_parser(
 
 def _mk_slice_stack_parser():
     p = ArgParser(add_help=False)
-    p.add_argument("--cellprofiler-pipeline", dest="cellprofiler_pipeline",
+    p.add_argument("--input-resolution", dest="input_resolution",
+                   type=float,
+                   default=None,
+                   help="")
+    p.add_argument("--output-resolution", dest="output_resolution",
+                   type=float,
+                   default=None,
+                   help="")
+    p.add_argument("--slice-gap", dest="slice_gap",
+                   type=float,
+                   default=None,
+                   help="")
+    p.add_argument("--input-directory", dest="input_directory",
                    type=str,
                    default=None,
-                   help="Load this pipeline file or project on startup")
-    p.add_argument("--image-directory", dest="image_directory",
-                   type=str,
-                   default=None,
-                   help="Make this directory the default input folder")
+                   help="")
     p.add_argument("--output-directory", dest="output_directory",
                    type=str,
                    default=None,
-                   help="Make this directory the default output folder")
-    p.add_argument("--first-image-set", dest="first_image_set",
-                   type=int,
-                   default=None,
-                   help="The one-based index of the first image set to process")
-    p.add_argument("--last-image-set", dest="last_image_set",
-                   type=int,
-                   default=None,
-                   help="The one-based index of the last image set to process")
-    p.add_argument("--python2-path", dest="python2_path",
-                   type=str,
-                   default=None,
-                   help="Set your PYTHONPATH environment variable for cellprofiler using this flag.")
-    p.add_argument("--java-home", dest="java_home",
-                   type=str,
-                   default=None,
-                   help="Set your JAVA_HOME environment variable for cellprofiler using this flag.")
+                   help="")
     return p
 
 slice_stack_parser = AnnotatedParser(parser=BaseParser(_mk_slice_stack_parser(), "slice_stack"),

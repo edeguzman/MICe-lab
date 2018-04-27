@@ -8,14 +8,14 @@ from pydpiper.execution.application import mk_application
 
 from tissvis.arguments import slice_stack_parser
 
-def slice_stack_cmd(application_options, slice_stack_options, output_dir: str, env_vars):
+def slice_stack_cmd(application_options, slice_stack_options, output_dir: str):
     stage = CmdStage(inputs=(), outputs=(),
                      cmd=['stacks_to_volume.py',
                           '--input-resolution %s' % slice_stack_options.input_resolution,
                           '--output-resolution %s' % slice_stack_options.output_resolution,
                           '--slice-gap %s' % slice_stack_options.slice_gap,
-                          '%s' % slice_stack_options.output],
-                     env_vars = env_vars)
+                          '%s' % slice_stack_options.input_directory,
+                          '%s' % slice_stack_options.output_directory])
     print(stage.render())
     #TODO since CmdStage.output==None, this line is needed for now...
     stage.set_log_file(log_file_name=os.path.join(output_dir, "stack.log"))
@@ -27,15 +27,12 @@ def slice_stack_pipeline(options):
     pipeline_name = options.application.pipeline_name
     s = Stages()
 
-    env_vars={}
-    env_vars['PYTHONPATH']=options.cellprofiler.python2_path
+    slice_stack_results = s.defer(slice_stack_cmd(application_options=options.application, \
+            slice_stack_options=options.slice_stack, output_dir=output_dir))
 
-    cellprofiler_results = s.defer(cellprofiler_batch(application_options=options.application, \
-            cellprofiler_options=options.cellprofiler, env_vars = env_vars, output_dir=output_dir))
+    return Result(stages=s, output=Namespace(slice_stack_output=slice_stack_results, ))
 
-    return Result(stages=s, output=Namespace(cellprofiler_output=cellprofiler_results, ))
-
-cellprofiler_application = mk_application(parsers=[cellprofiler_parser], pipeline=cellprofiler_pipeline)
+cellprofiler_application = mk_application(parsers=[slice_stack_parser], pipeline=slice_stack_pipeline)
 
 if __name__ == "__main__":
     cellprofiler_application()
