@@ -103,6 +103,8 @@ def _mk_TV_stitch_parser():
 TV_stitch_parser = AnnotatedParser(parser=BaseParser(_mk_TV_stitch_parser(), "TV_stitch"),
                                    namespace="TV_stitch") #, cast=to_TV_stitch_conf)
 
+#############################################
+
 def _mk_cellprofiler_parser():
     p = ArgParser(add_help=False)
     p.add_argument("--cellprofiler-pipeline", dest="cellprofiler_pipeline",

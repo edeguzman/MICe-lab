@@ -9,7 +9,7 @@ from pydpiper.execution.application import mk_application
 
 from tissvis.arguments import cellprofiler_parser
 
-def cellprofiler_batch(application_options, cellprofiler_options, env_vars):
+def cellprofiler_batch(application_options, cellprofiler_options, output_dir: str, env_vars):
     stage = CmdStage(inputs=(), outputs=(),
                      cmd=['cellprofiler', '-c', '-r',
                           '-p %s' % cellprofiler_options.cellprofiler_pipeline,
@@ -17,10 +17,13 @@ def cellprofiler_batch(application_options, cellprofiler_options, env_vars):
                           '-o %s' % cellprofiler_options.output_directory],
                      env_vars = env_vars)
     print(stage.render())
+    #TODO since CmdStage.output==None, this line is needed for now...
+    stage.set_log_file(log_file_name=os.path.join(output_dir, "cpp.log"))
 
     return Result(stages=Stages([stage]), output=())
 
 def cellprofiler_pipeline(options):
+    output_dir = options.application.output_directory
     pipeline_name = options.application.pipeline_name
     s = Stages()
 
@@ -28,12 +31,10 @@ def cellprofiler_pipeline(options):
     # Step 1: Run cellprofiler.py
     #############################
     env_vars={}
-    env_vars['PYTHONPATH']=cellprofiler_options.python2_path
+    env_vars['PYTHONPATH']=options.cellprofiler.cellprofiler.python2_path
 
     cellprofiler_results = s.defer(cellprofiler_batch(application_options=options.application, \
-            cellprofiler_options=options.cellprofiler.cellprofiler, env_vars = env_vars))
-    TV_stitch_results = s.defer(TV_stitch_cmd(application_options=options.application, \
-            TV_stitch_options=options.tissue_vision.TV_stitch, output_dir=output_dir, env_vars=env_vars))
+            cellprofiler_options=options.cellprofiler.cellprofiler, env_vars = env_vars, output_dir=output_dir))
 
     return Result(stages=s, output=Namespace(cellprofiler_output=cellprofiler_results, ))
 
@@ -42,13 +43,13 @@ def cellprofiler_pipeline(options):
 # Make Parser & Application
 #############################
 
-cellprofiler_parser = CompoundParser([cellprofiler_parser])
+#cellprofiler_parser = CompoundParser([cellprofiler_parser])
 
-cellprofiler_application = mk_application(
-    parsers=[AnnotatedParser(parser=cellprofiler_parser, namespace='cellprofiler')],
-    pipeline=cellprofiler_pipeline)
+#cellprofiler_application = mk_application(
+    #parsers=[AnnotatedParser(parser=cellprofiler_parser, namespace='cellprofiler')],
+    #pipeline=cellprofiler_pipeline)
 
-#cellprofiler_application = mk_application(parsers=[cellprofiler_parser], pipeline=cellprofiler_pipeline)
+cellprofiler_application = mk_application(parsers=[cellprofiler_parser], pipeline=cellprofiler_pipeline)
 #lsq6_application = mk_application(parsers=[lsq6_parser], pipeline=lsq6_pipeline)
 #############################
 # Run
