@@ -16,7 +16,8 @@ setup(name="MICe-lab",
         'typing',
         'scipy',
         'snakemake',
-        'matplotlib'
+        'matplotlib',
+        'Pillow'
       ],
       dependency_links=['https://github.com/opencv/opencv/archive/3.1.0.tar.gz',
 	'https://github.com/Mouse-Imaging-Centre/pydpiper'],
@@ -31,6 +32,7 @@ setup(name="MICe-lab",
                #TODO remove these once the entire pipeline is completed
                'tissvis/TV_stitch.py',
                'tissvis/cellprofiler.py',
-               'tissvis/tile_stack.py'
+               'tissvis/slice_stack.py',
+               'tissvis/stacks_to_volume.py',
                ],
       )

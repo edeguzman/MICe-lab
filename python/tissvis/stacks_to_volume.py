@@ -2,7 +2,7 @@
 
 from pyminc.volumes.factory import *
 import numpy as np
-import scipy.misc
+import scipy.ndimage
 import scipy.interpolate
 import scipy.ndimage
 from optparse import OptionParser, OptionGroup
@@ -45,16 +45,16 @@ def congrid(a, newdims, method='linear', centre=False, minusone=False):
     old = np.array( a.shape )
     ndims = len( a.shape )
     if len( newdims ) != ndims:
-        print "[congrid] dimensions error. " \
+        print("[congrid] dimensions error. " \
               "This routine currently only support " \
-              "rebinning to the same number of dimensions."
+              "rebinning to the same number of dimensions.")
         return None
     newdims = np.asarray( newdims, dtype=float )
     dimlist = []
 
     if method == 'neighbour':
         for i in range( ndims ):
-            base = np.indices(newdims)[i]
+            base = np.indices(newdims.astype(np.int64))[i]
             dimlist.append( (old[i] - m1) / (newdims[i] - m1) \
                             * (base + ofs) - ofs )
         cd = np.array( dimlist ).round().astype(int)
@@ -74,7 +74,7 @@ def congrid(a, newdims, method='linear', centre=False, minusone=False):
         mint = scipy.interpolate.interp1d( olddims[-1], a, kind=method )
         newa = mint( dimlist[-1] )
 
-        trorder = [ndims - 1] + range( ndims - 1 )
+        trorder = [ndims - 1] + list(range( ndims - 1))
         for i in range( ndims - 2, -1, -1 ):
             newa = newa.transpose( trorder )
 
@@ -92,7 +92,7 @@ def congrid(a, newdims, method='linear', centre=False, minusone=False):
         nslices = [ slice(0,j) for j in list(newdims) ]
         newcoords = np.mgrid[nslices]
 
-        newcoords_dims = range(np.rank(newcoords))
+        newcoords_dims = list(range(np.rank(newcoords)))
         #make first index last
         newcoords_dims.append(newcoords_dims.pop(0))
         newcoords_tr = newcoords.transpose(newcoords_dims)
@@ -108,9 +108,9 @@ def congrid(a, newdims, method='linear', centre=False, minusone=False):
         newa = scipy.ndimage.map_coordinates(a, newcoords)
         return newa
     else:
-        print "Congrid error: Unrecognized interpolation type.\n", \
+        print("Congrid error: Unrecognized interpolation type.\n", \
               "Currently only \'neighbour\', \'nearest\',\'linear\',", \
-              "and \'spline\' are supported."
+              "and \'spline\' are supported.")
         return None
 
 
@@ -200,7 +200,7 @@ if __name__ == "__main__":
     output_filename = args.pop()
     n_slices = len(args)
     # need to know the size of the output slices - read in a single slice
-    test_slice = scipy.misc.imread(args[0])
+    test_slice = scipy.ndimage.imread(args[0])
     slice_shape = np.array(test_slice.shape)
     size_fraction = options.input_resolution / options.output_resolution
     output_size = np.ceil(slice_shape * size_fraction).astype('int')
@@ -215,8 +215,8 @@ if __name__ == "__main__":
                                        options.output_resolution), 
                                 volumeType='ushort')
     for i in range(n_slices):
-        print "In slice", i+1, "out of", n_slices
-        imslice = scipy.misc.imread(args[i])
+        print("In slice", i+1, "out of", n_slices)
+        imslice = scipy.ndimage.imread(args[i])
 
         # normalize slice to lie between 0 and 1
         original_type_max = np.iinfo(imslice.dtype).max
