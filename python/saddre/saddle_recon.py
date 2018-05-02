@@ -38,7 +38,8 @@ def saddle_recon_pipeline(options):
     # TODO check that there are fid files in this directory
     # TODO check that all mandatory inputs are provided
     #Make list of input fid files, with location, and create a "FileAtom" type
-    varian_fid_files = [fid_input_dir + "/fid" + str(num_fid) for num_fid in range(0,options.saddle_recon.varian_recon.num_fids)]
+    varian_fid_files = [fid_input_dir + "/fid" + str(num_fid)
+                        for num_fid in range(0,options.saddle_recon.varian_recon.num_fids)]
     fids = [FileAtom(name) for name
             in varian_fid_files]
 

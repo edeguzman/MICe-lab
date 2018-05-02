@@ -3,18 +3,58 @@
 import os
 
 from configargparse import Namespace
+import pandas as pd
+from typing import List
+import warnings
+
 from pydpiper.core.stages import Stages, Result, CmdStage
 from pydpiper.core.arguments import CompoundParser, AnnotatedParser
 from pydpiper.execution.application import mk_application
+from pydpiper.minc.files import MincAtom
+from pydpiper.core.files import FileAtom
+
 
 from tissvis.arguments import TV_stitch_parser
 
-def TV_stitch_cmd(application_options, TV_stitch_options, slice_dir: str):
-    stage = CmdStage(inputs=(tiles), outputs=(slices),
+class Brain(object):
+    def __init__(self,
+                 directory: str,
+                 name: str,
+                 slices = None) -> None:
+        self.directory = directory
+        self.name = name
+        self.slices = None
+
+    @property
+    def path(self) -> str:
+        return self.directory
+
+def get_brains(options):
+    if options.files:
+        raise ValueError("you used --files; please use --csv-file")
+
+    csv = pd.read_csv(options.csv_file)
+    csv_base = os.path.dirname(options.csv_file)
+
+    brains = [Brain(brain_directory, brain_name)
+            for brain_directory, brain_name in zip(csv.brain_directory, csv.brain_name)]
+
+    return brains
+
+def TV_stitch_wrap(brain_directory: str,
+                   brain_name: str,
+                   slices,
+                   application_options,
+                   TV_stitch_options,
+                   output_dir: str):
+    #TODO inputs=() hack works around line 5 in conversion.py; 'str' object has no attribute 'path'
+    stage = CmdStage(inputs=(), outputs=(),
                      cmd=['TV_stitch.py', '--clobber', '--keeptmp',
                           '--verbose' if application_options.verbose else '',
-                          '--skip_tile_match' if TV_stitch_options.skip_tile_match else '',
+                          '--save_positions_file %s_positions.txt' % brain_name \
+                              if TV_stitch_options.save_positions_file else '',
                           '--scaleoutput %s' % TV_stitch_options.scale_output if TV_stitch_options.scale_output else '',
+                          '--skip_tile_match' if TV_stitch_options.skip_tile_match else '',
                           '--Zstart %s' % TV_stitch_options.Zstart if TV_stitch_options.Zstart else '',
                           '--Zend %s' % TV_stitch_options.Zend if TV_stitch_options.Zend else '',
                           '--Ystart %s' % TV_stitch_options.Ystart if TV_stitch_options.Ystart else '',
@@ -24,8 +64,6 @@ def TV_stitch_cmd(application_options, TV_stitch_options, slice_dir: str):
                           '--nogradimag' if TV_stitch_options.no_gradient_image else '',
                           '--use_positions_file %s' % TV_stitch_options.use_positions_file \
                               if TV_stitch_options.use_positions_file else '',
-                          '--save_positions_file %s' % TV_stitch_options.save_positions_file \
-                              if TV_stitch_options.save_positions_file else '',
                           '--overlapx %s' % TV_stitch_options.overlapx if TV_stitch_options.overlapx else '',
                           '--overlapy %s' % TV_stitch_options.overlapy if TV_stitch_options.overlapy else '',
                           '--channel %s' % TV_stitch_options.channel if TV_stitch_options.channel else '',
@@ -36,11 +74,12 @@ def TV_stitch_cmd(application_options, TV_stitch_options, slice_dir: str):
                           #'--file_type %s' % TV_stitch_options.use_positions_file if TV_stitch_options.use_positions_file else '',
                           #'--TV_file_type %s' % TV_stitch_options.use_positions_file if TV_stitch_options.use_positions_file el
                           '--use_IM' if TV_stitch_options.use_imagemagick else '',
-                          os.path.join(TV_stitch_options.top_level_input_directory, TV_stitch_options.brain),
-                          os.path.join(slice_dir, TV_stitch_options.brain)])
+                          os.path.join(brain_directory, brain_name),
+                          output_dir])
+                          #os.path.join(output_dir, application_options.pipeline_name + '_stitched', brain_name)])
     print(stage.render())
     #TODO since CmdStage.output==None, this line is needed for now...
-    stage.set_log_file(log_file_name=os.path.join(slice_dir, "tissvis.log"))
+    stage.set_log_file(log_file_name=os.path.join(output_dir, "tissvis.log"))
 
     return Result(stages=Stages([stage]), output=())
 
@@ -48,20 +87,25 @@ def tissue_vision_pipeline(options):
     output_dir = options.application.output_directory
     pipeline_name = options.application.pipeline_name
 
-    #TODO slice_output_dir = options.tissue_vision.TV_stitch.slice_output_directory
-
     slice_dir = os.path.join(output_dir, pipeline_name + "_slice")
 
     s = Stages()
 
+    brains = get_brains(options.application)
+    slices = [brain.slices for brain in brains]
     #############################
     # Step 1: Run TV_stitch.py
     #############################
-    TV_stitch_results = s.defer(TV_stitch_cmd(application_options=options.application, \
-            TV_stitch_options=options.tissue_vision.TV_stitch, slice_dir=slice_dir))
+    for brain in brains:
+        TV_stitch_results = s.defer(TV_stitch_wrap(brain_directory = brain.directory,
+                                                   brain_name = brain.name,
+                                                   slices = slices,
+                                                   application_options = options.application,
+                                                   TV_stitch_options = options.tissue_vision.TV_stitch,
+                                                   output_dir = output_dir
+                                                   ))
 
-    return Result(stages=s, output=Namespace(TV_stitch_output=TV_stitch_results, ))
-
+    return Result(stages=s, output=Namespace(TV_stitch_output=TV_stitch_results))
 
 #############################
 # Combine Parser & Make Application

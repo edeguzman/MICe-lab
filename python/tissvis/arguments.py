@@ -2,6 +2,10 @@ from configargparse import ArgParser, Namespace
 from pydpiper.core.util import NamedTuple
 from pydpiper.core.arguments import BaseParser, AnnotatedParser
 
+
+
+#############################################
+
 def _mk_TV_stitch_parser():
     p = ArgParser(add_help=False)
     p.add_argument("--skip-tile-match", dest="skip_tile_match",
@@ -35,10 +39,6 @@ def _mk_TV_stitch_parser():
                    type=int,
                    default=None,
                    help="X end index")
-    p.add_argument("--top-level-input-directory", dest="top_level_input_directory",
-                   type=str,
-                   default='.',
-                   help="Top level directory where folders containing tifs for each slice are contained")
     p.add_argument("--brain", dest="brain",
                    type=str,
                    default=None,
@@ -47,8 +47,7 @@ def _mk_TV_stitch_parser():
                    action="store_true", default=False,
                    help="Do not use gradient and raw image combined for correlation")
     p.add_argument("--save-positions-file", dest="save_positions_file",
-                   type=str,
-                   default=None,
+                   action="store_true", default=False,
                    help="Save the final positions to file (for subsequent use with --use-positions-file)")
     p.add_argument("--use-positions-file", dest="use_positions_file",
                    type=str,
@@ -85,23 +84,8 @@ def _mk_TV_stitch_parser():
 
     return p
 
-# TODO figure out with this with "cast=to_TV_stitch_conf" gives ValueError. Code can run without this though.
-# TVSTITCHConf = NamedTuple('TVSTITCHConf', [
-#     ('skip_tile_match', bool),
-#     ('scale_output', int),
-#     ('Zstart', int),
-#     ('Zend', int),
-#     ('top_level_input_directory', str),
-#     ('slice_output_directory', str),
-#     ('brain', str)
-# ])
-#
-#
-# def to_TV_stitch_conf(TV_stitch_args: Namespace) -> TVSTITCHConf:
-#     return TVSTITCHConf(**TV_stitch_args.__dict__)
-
 TV_stitch_parser = AnnotatedParser(parser=BaseParser(_mk_TV_stitch_parser(), "TV_stitch"),
-                                   namespace="TV_stitch") #, cast=to_TV_stitch_conf)
+                                   namespace="TV_stitch")
 
 #############################################
 
