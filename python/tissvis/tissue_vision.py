@@ -92,6 +92,7 @@ def tissue_vision_pipeline(options):
     #############################
     for brain in brains:
         brain.slice_directory = FileAtom(os.path.join(output_dir, pipeline_name + "_stitched", brain.name))
+        if not (os.path.exists(brain.slice_directory.path)): os.makedirs(brain.slice_directory.path)
         TV_stitch_results = s.defer(TV_stitch_wrap(brain_directory = brain.brain_directory,
                                                    brain_name = brain.name,
                                                    slice_directory = brain.slice_directory,
