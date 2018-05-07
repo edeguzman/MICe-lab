@@ -4,7 +4,7 @@ import os
 
 from configargparse import Namespace
 import pandas as pd
-from typing import List
+from typing import List, Tuple
 import warnings
 
 from pydpiper.core.stages import Stages, Result, CmdStage
@@ -18,16 +18,13 @@ from tissvis.arguments import TV_stitch_parser
 
 class Brain(object):
     def __init__(self,
-                 directory: str,
+                 brain_directory: FileAtom,
                  name: str,
-                 slices = None) -> None:
-        self.directory = directory
+                 slice_directory: FileAtom = None) -> None:
+        self.brain_directory = brain_directory
         self.name = name
-        self.slices = None
+        self.slice_directory = slice_directory
 
-    @property
-    def path(self) -> str:
-        return self.directory
 
 def get_brains(options):
     if options.files:
@@ -36,19 +33,18 @@ def get_brains(options):
     csv = pd.read_csv(options.csv_file)
     csv_base = os.path.dirname(options.csv_file)
 
-    brains = [Brain(brain_directory, brain_name)
+    brains = [Brain(FileAtom(brain_directory), brain_name)
             for brain_directory, brain_name in zip(csv.brain_directory, csv.brain_name)]
 
     return brains
 
-def TV_stitch_wrap(brain_directory: str,
+def TV_stitch_wrap(brain_directory: FileAtom,
                    brain_name: str,
-                   slices,
+                   slice_directory: FileAtom,
                    application_options,
                    TV_stitch_options,
                    output_dir: str):
-    #TODO inputs=() hack works around line 5 in conversion.py; 'str' object has no attribute 'path'
-    stage = CmdStage(inputs=(), outputs=(),
+    stage = CmdStage(inputs=(brain_directory,), outputs=(slice_directory,),
                      cmd=['TV_stitch.py', '--clobber', '--keeptmp',
                           '--verbose' if application_options.verbose else '',
                           '--save_positions_file %s_positions.txt' % brain_name \
@@ -74,32 +70,31 @@ def TV_stitch_wrap(brain_directory: str,
                           #'--file_type %s' % TV_stitch_options.use_positions_file if TV_stitch_options.use_positions_file else '',
                           #'--TV_file_type %s' % TV_stitch_options.use_positions_file if TV_stitch_options.use_positions_file el
                           '--use_IM' if TV_stitch_options.use_imagemagick else '',
-                          os.path.join(brain_directory, brain_name),
-                          output_dir])
-                          #os.path.join(output_dir, application_options.pipeline_name + '_stitched', brain_name)])
+                          os.path.join(brain_directory.path, brain_name),
+                          os.path.join(slice_directory.path, brain_name)],
+                     log_file=os.path.join(output_dir, "tissvis.log"))
+
     print(stage.render())
     #TODO since CmdStage.output==None, this line is needed for now...
-    stage.set_log_file(log_file_name=os.path.join(output_dir, "tissvis.log"))
+    #stage.set_log_file(log_file_name=os.path.join(output_dir, "tissvis.log"))
 
-    return Result(stages=Stages([stage]), output=())
+    return Result(stages=Stages([stage]), output=(slice_directory))
 
 def tissue_vision_pipeline(options):
     output_dir = options.application.output_directory
     pipeline_name = options.application.pipeline_name
 
-    slice_dir = os.path.join(output_dir, pipeline_name + "_slice")
-
     s = Stages()
 
-    brains = get_brains(options.application)
-    slices = [brain.slices for brain in brains]
+    brains = get_brains(options.application) #List(Brain,...)
     #############################
     # Step 1: Run TV_stitch.py
     #############################
     for brain in brains:
-        TV_stitch_results = s.defer(TV_stitch_wrap(brain_directory = brain.directory,
+        brain.slice_directory = FileAtom(os.path.join(output_dir, pipeline_name + "_stitched", brain.name))
+        TV_stitch_results = s.defer(TV_stitch_wrap(brain_directory = brain.brain_directory,
                                                    brain_name = brain.name,
-                                                   slices = slices,
+                                                   slice_directory = brain.slice_directory,
                                                    application_options = options.application,
                                                    TV_stitch_options = options.tissue_vision.TV_stitch,
                                                    output_dir = output_dir
