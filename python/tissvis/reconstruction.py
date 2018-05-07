@@ -1,5 +1,7 @@
 import os
 
+from typing import Dict
+
 from pydpiper.core.stages import Stages, Result, CmdStage
 from pydpiper.core.files import FileAtom
 
@@ -38,8 +40,41 @@ def TV_stitch_wrap(brain_directory: FileAtom,
                           '--use_IM' if TV_stitch_options.use_imagemagick else '',
                           os.path.join(brain_directory.path, brain_name),
                           os.path.join(slice_directory.path, brain_name)],
-                     log_file=os.path.join(output_dir, "TV_stitch.log"))
-
+                     log_file = os.path.join(output_dir, "TV_stitch.log"))
     print(stage.render())
 
     return Result(stages=Stages([stage]), output=(slice_directory))
+
+def cellprofiler_wrap(slice_directory: FileAtom,
+                       cellprofiler_pipeline: FileAtom,
+                       batch_data: FileAtom,
+                       overLays: FileAtom,
+                       smooths: FileAtom,
+                       microglias: FileAtom,
+                       output_dir: str,
+                       env_vars: Dict[str, str]):
+    s = Stages()
+
+    stage = CmdStage(inputs=(slice_directory, cellprofiler_pipeline), outputs=(batch_data,),
+                     cmd=['cellprofiler', '-c', '-r',
+                          '-p %s' % cellprofiler_pipeline.path,
+                          '-i %s' % slice_directory.path,
+                          '-o %s' % batch_data.dir],
+                     log_file = os.path.join(output_dir,"cellprofiler.log"),
+                     env_vars = env_vars)
+    print(stage.render())
+    s.add(stage)
+
+    stage = CmdStage(inputs=(batch_data), outputs=(overLays, smooths, microglias),
+                     cmd=['cellprofiler', '-c', '-r',
+                          '-p %s' % batch_data.path,
+                          '-f %s' % 1, #TODO actually propagate Zstart and Zend from upstream
+                          '-l %s' % 2],
+                     log_file=os.path.join(output_dir, "cellprofiler.log"),
+                     env_vars=env_vars)
+    print(stage.render())
+    s.add(stage)
+
+    return Result(stages=s, output=(overLays, smooths, microglias))
+
+# cellprofiler -c -r -p /hpf/largeprojects/MICe/nwang/Salter_Microglia_2x2x2/cellprofiler/Batch_data.h5 -f 1 -l 1
