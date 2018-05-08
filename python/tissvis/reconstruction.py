@@ -1,6 +1,6 @@
 import os
 
-from typing import Dict
+from typing import Dict, List
 
 from pydpiper.core.stages import Stages, Result, CmdStage
 from pydpiper.core.files import FileAtom
@@ -8,11 +8,11 @@ from pydpiper.core.files import FileAtom
 
 def TV_stitch_wrap(brain_directory: FileAtom,
                    brain_name: str,
-                   slice_directory: FileAtom,
+                   stitched: List[FileAtom],
                    application_options,
                    TV_stitch_options,
                    output_dir: str):
-    stage = CmdStage(inputs=(brain_directory,), outputs=(slice_directory,),
+    stage = CmdStage(inputs=(brain_directory,), outputs=tuple(stitched),
                      cmd=['TV_stitch.py', '--clobber', '--keeptmp',
                           '--verbose' if application_options.verbose else '',
                           '--save_positions_file %s_positions.txt' % brain_name
@@ -39,11 +39,11 @@ def TV_stitch_wrap(brain_directory: FileAtom,
                           # '--TV_file_type %s' % TV_stitch_options.use_positions_file if TV_stitch_options.use_positions_file el
                           '--use_IM' if TV_stitch_options.use_imagemagick else '',
                           os.path.join(brain_directory.path, brain_name),
-                          os.path.join(slice_directory.path, brain_name)],
+                          os.path.join(stitched[0].dir, brain_name)],
                      log_file = os.path.join(output_dir, "TV_stitch.log"))
     print(stage.render())
 
-    return Result(stages=Stages([stage]), output=(slice_directory))
+    return Result(stages=Stages([stage]), output=(stitched))
 
 def cellprofiler_wrap(slice_directory: FileAtom,
                        cellprofiler_pipeline: FileAtom,
@@ -65,7 +65,7 @@ def cellprofiler_wrap(slice_directory: FileAtom,
     print(stage.render())
     s.add(stage)
 
-    stage = CmdStage(inputs=(batch_data), outputs=(overLays, smooths, microglias),
+    stage = CmdStage(inputs=(batch_data,), outputs=(overLays, smooths, microglias),
                      cmd=['cellprofiler', '-c', '-r',
                           '-p %s' % batch_data.path,
                           '-f %s' % 1, #TODO actually propagate Zstart and Zend from upstream

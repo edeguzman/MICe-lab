@@ -18,7 +18,8 @@ from numpy.linalg import lstsq
 import glob
 import operator
 
-from tissvis.Zstack_icorr import *
+#TODO why is this even needed? it breaks importing from TV_stitch
+#from tissvis.Zstack_icorr import *
 
 from scipy.stats import t
 
@@ -188,6 +189,43 @@ def run_cvFilter(infile,outfile,kernelstr="gauss",kernelwidth=9,filtwidth=1.4):
     cmdstr = "cvFilter -k %s -w %i -s %f %s %s"%(kernelstr,kernelwidth,filtwidth,infile,outfile)
     cmdout = run_subprocess(cmdstr)
     return 0
+
+#new code
+def get_params(input,):
+    # find and compose list of directories to work with
+    try:
+        fulldirectorylist = glob.glob(input + '-[0-9]*')
+        if not fulldirectorylist:
+            raise FatalError("Cannot find input directory(ies).")
+    except FatalError as e:
+        print('Error(%s):' % program_name, e.msg)
+        raise SystemExit
+    # refine and sort directory list
+    direclist = []
+    inputdirhead, junk, input_prefix = input.rpartition('/')
+    reprog = re.compile(input_prefix + '[0-9-]*\Z')
+    for cname in fulldirectorylist:
+        m = reprog.search(cname)
+        if (m != None): direclist.append(inputdirhead + '/' + m.group(0))
+    direclist.sort()
+    # read #X,#Y,#Zpeizo from first Mosaic text file
+    TVscanfile = direclist[0] + '/' + 'Mosaic_' + direclist[0].rsplit('/')[-1] + '.txt'
+    TVparamdict = TV_parameters(TVscanfile)
+    (N_x, N_y, N_z_slices, N_z_piezo) = (TVparamdict['mcolumns'], TVparamdict['mrows'], \
+                                         TVparamdict['sections'], [1, TVparamdict['layers']][TVparamdict['Zscan']])
+    if (len(direclist) != N_z_slices):
+        print("Mismatch in Mosaic file 'sections' (%d) and number of identified directories (%d)" % (
+        N_z_slices, len(direclist)))
+        N_z_slices = len(direclist)
+        TVparamdict['sections'] = N_z_slices
+    try:
+        globlist = glob.glob(direclist[0] + '/' + '*-*-*' + '_%02d.' % 1 + 'tif') #channelflag=1, imgftype='tif'
+        if (len(globlist) == 0):
+            raise FatalError("Cannot find files for the specified channel.")
+    except FatalError as e:
+        print('Error(%s):' % program_name, e.msg)
+        raise SystemExit
+    return N_x, N_y, N_z_slices
 
 def generate_preprocessed_images(inputdirectory,starts=[None,None,None],ends=[None,None,None],channelflag=1,\
                                  imgftype='tif',fastpiezoloop=False,gradcombine=False,im=False,
