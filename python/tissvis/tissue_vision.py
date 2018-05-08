@@ -69,10 +69,6 @@ def tissue_vision_pipeline(options):
             brain.slice_stitched = FileAtom(os.path.join(brain.slice_directory.path, brain.name + "_Z%04d.tif" % z))
             stitched.append(brain.slice_stitched)
 
-        #TODO remove this when you change the output to be proper
-        if not (os.path.exists(brain.slice_directory.path)):
-            os.makedirs(brain.slice_directory.path)
-
         TV_stitch_result = s.defer(TV_stitch_wrap(brain_directory = brain.brain_directory,
                                                 brain_name = brain.name,
                                                 stitched = stitched,
@@ -108,16 +104,17 @@ def tissue_vision_pipeline(options):
             smooths.append(brain.slice_smooth)
             microglias.append(brain.slice_microglia)
 
-        s.defer(cellprofiler_wrap(slice_directory = brain.slice_directory,
-                                  cellprofiler_pipeline = cppline,
-                                  batch_data = brain.batch_data,
-                                  overLays = brain.slice_overLay,
-                                  smooths = brain.slice_smooth,
-                                  microglias = brain.slice_microglia,
-                                  output_dir = output_dir,
-                                  env_vars = env_vars
-                                 ))
-
+            cellprofiler_results = s.defer(cellprofiler_wrap( slice_directory = brain.slice_directory,
+                                                              cellprofiler_pipeline = cppline,
+                                                              batch_data = brain.batch_data,
+                                                              overLays = brain.slice_overLay,
+                                                              smooths = brain.slice_smooth,
+                                                              microglias = brain.slice_microglia,
+                                                              Zend = brain.z,
+                                                              output_dir = output_dir,
+                                                              env_vars = env_vars
+                                                             ))
+            all_cellprofiler_results.append(cellprofiler_results)
 
     return Result(stages=s, output=Namespace(TV_stitch_output=all_TV_stitch_results))
 

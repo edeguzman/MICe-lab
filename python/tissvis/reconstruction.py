@@ -51,6 +51,7 @@ def cellprofiler_wrap(slice_directory: FileAtom,
                        overLays: FileAtom,
                        smooths: FileAtom,
                        microglias: FileAtom,
+                       Zend: int,
                        output_dir: str,
                        env_vars: Dict[str, str]):
     s = Stages()
@@ -68,8 +69,8 @@ def cellprofiler_wrap(slice_directory: FileAtom,
     stage = CmdStage(inputs=(batch_data,), outputs=(overLays, smooths, microglias),
                      cmd=['cellprofiler', '-c', '-r',
                           '-p %s' % batch_data.path,
-                          '-f %s' % 1, #TODO actually propagate Zstart and Zend from upstream
-                          '-l %s' % 2],
+                          '-f %s' % 1,
+                          '-l %s' % Zend],
                      log_file=os.path.join(output_dir, "cellprofiler.log"),
                      env_vars=env_vars)
     print(stage.render())
