@@ -116,7 +116,9 @@ def tissue_vision_pipeline(options):
                                                              ))
         all_cellprofiler_results.append(cellprofiler_results)
 
-    return Result(stages=s, output=Namespace(TV_stitch_output=all_TV_stitch_results))
+    return Result(stages=s, output=Namespace(TV_stitch_output=all_TV_stitch_results,
+                                             cellprofiler_output=all_cellprofiler_results,
+                                             ))
 
 
 
