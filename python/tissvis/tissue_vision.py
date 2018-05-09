@@ -53,6 +53,10 @@ def tissue_vision_pipeline(options):
 
     brains = get_brains(options.application) # List(Brain,...)
 
+    env_vars = {}
+    env_vars['PYTHONPATH'] = options.tissue_vision.cellprofiler.python2_path
+    cppline = FileAtom(options.tissue_vision.cellprofiler.cellprofiler_pipeline)
+
     # Hold results obtained in the loop
     all_TV_stitch_results = []
     all_cellprofiler_results = []
@@ -82,11 +86,7 @@ def tissue_vision_pipeline(options):
 # Step 2: Run cellprofiler
 #############################
 
-    env_vars = {}
-    env_vars['PYTHONPATH'] = options.tissue_vision.cellprofiler.python2_path
-    cppline = FileAtom(options.tissue_vision.cellprofiler.cellprofiler_pipeline)
-
-    for brain in brains: #TODO remove this property
+# TODO remove this property
         brain.cp_directory = os.path.join(output_dir, pipeline_name + "_cellprofiler", brain.name)
         brain.batch_data = FileAtom(os.path.join(brain.cp_directory,"Batch_data.h5"))
 
@@ -104,7 +104,7 @@ def tissue_vision_pipeline(options):
             smooths.append(brain.slice_smooth)
             microglias.append(brain.slice_microglia)
 
-            cellprofiler_results = s.defer(cellprofiler_wrap( slice_directory = brain.slice_directory,
+        cellprofiler_results = s.defer(cellprofiler_wrap( stitched = TV_stitch_result,
                                                               cellprofiler_pipeline = cppline,
                                                               batch_data = brain.batch_data,
                                                               overLays = brain.slice_overLay,
@@ -114,7 +114,7 @@ def tissue_vision_pipeline(options):
                                                               output_dir = output_dir,
                                                               env_vars = env_vars
                                                              ))
-            all_cellprofiler_results.append(cellprofiler_results)
+        all_cellprofiler_results.append(cellprofiler_results)
 
     return Result(stages=s, output=Namespace(TV_stitch_output=all_TV_stitch_results))
 

@@ -45,7 +45,7 @@ def TV_stitch_wrap(brain_directory: FileAtom,
 
     return Result(stages=Stages([stage]), output=(stitched))
 
-def cellprofiler_wrap(slice_directory: FileAtom,
+def cellprofiler_wrap(stitched: List[FileAtom],
                        cellprofiler_pipeline: FileAtom,
                        batch_data: FileAtom,
                        overLays: FileAtom,
@@ -56,10 +56,10 @@ def cellprofiler_wrap(slice_directory: FileAtom,
                        env_vars: Dict[str, str]):
     s = Stages()
 
-    stage = CmdStage(inputs=(slice_directory, cellprofiler_pipeline), outputs=(batch_data,),
+    stage = CmdStage(inputs=(stitched+[cellprofiler_pipeline]), outputs=(batch_data,),
                      cmd=['cellprofiler', '-c', '-r',
                           '-p %s' % cellprofiler_pipeline.path,
-                          '-i %s' % slice_directory.path,
+                          '-i %s' % stitched[0].dir,
                           '-o %s' % batch_data.dir],
                      log_file = os.path.join(output_dir,"cellprofiler.log"),
                      env_vars = env_vars)
