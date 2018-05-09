@@ -12,8 +12,8 @@ from pydpiper.core.arguments import CompoundParser, AnnotatedParser
 from pydpiper.execution.application import mk_application
 from pydpiper.core.files import FileAtom, explode
 
-from tissvis.arguments import TV_stitch_parser, cellprofiler_parser
-from tissvis.reconstruction import TV_stitch_wrap, cellprofiler_wrap
+from tissvis.arguments import TV_stitch_parser, cellprofiler_parser, stacks_to_volume_parser
+from tissvis.reconstruction import TV_stitch_wrap, cellprofiler_wrap, stacks_to_volume
 from tissvis.TV_stitch import get_params
 
 class Brain(object):
@@ -68,7 +68,7 @@ def tissue_vision_pipeline(options):
         brain.slice_directory = FileAtom(os.path.join(output_dir, pipeline_name + "_stitched", brain.name))
 
         stitched = []
-        brain.x, brain.y, brain.z = get_params(os.path.join(brain.brain_directory.path, brain.name))
+        brain.x, brain.y, brain.z, brain.z_resolution = get_params(os.path.join(brain.brain_directory.path, brain.name))
         for z in range (1, brain.z+1):
             brain.slice_stitched = FileAtom(os.path.join(brain.slice_directory.path, brain.name + "_Z%04d.tif" % z))
             stitched.append(brain.slice_stitched)
@@ -104,7 +104,7 @@ def tissue_vision_pipeline(options):
             smooths.append(brain.slice_smooth)
             microglias.append(brain.slice_microglia)
 
-        cellprofiler_results = s.defer(cellprofiler_wrap( stitched = TV_stitch_result,
+        cellprofiler_result = s.defer(cellprofiler_wrap(stitched = TV_stitch_result,
                                                               cellprofiler_pipeline = cppline,
                                                               batch_data = brain.batch_data,
                                                               overLays = brain.slice_overLay,
@@ -114,19 +114,31 @@ def tissue_vision_pipeline(options):
                                                               output_dir = output_dir,
                                                               env_vars = env_vars
                                                              ))
-        all_cellprofiler_results.append(cellprofiler_results)
+        all_cellprofiler_results.append(cellprofiler_result)
+
+#############################
+# Step 3: Run stacks_to_volume.py
+#############################
+        microglia_volume = FileAtom(os.path.join(output_dir, pipeline_name + "_microglia_stacked",
+                                                 brain.name + "_microglia_stacked.mnc"))
+
+        microglia_slices_to_volume_results = s.defer(stacks_to_volume(
+            slices = microglias,
+            volume = microglia_volume,
+            stacks_to_volume_options=options.tissue_vision.stacks_to_volume,
+            z_resolution=brain.z_resolution,
+            output_dir=output_dir
+            ))
 
     return Result(stages=s, output=Namespace(TV_stitch_output=all_TV_stitch_results,
-                                             cellprofiler_output=all_cellprofiler_results,
+                                             cellprofiler_output=all_cellprofiler_results
                                              ))
-
-
 
 #############################
 # Combine Parser & Make Application
 #############################
 
-tissue_vision_parser = CompoundParser([TV_stitch_parser, cellprofiler_parser])
+tissue_vision_parser = CompoundParser([TV_stitch_parser, cellprofiler_parser, stacks_to_volume_parser])
 
 tissue_vision_application = mk_application(
     parsers=[AnnotatedParser(parser=tissue_vision_parser, namespace='tissue_vision')],

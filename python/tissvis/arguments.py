@@ -126,29 +126,18 @@ cellprofiler_parser = AnnotatedParser(parser=BaseParser(_mk_cellprofiler_parser(
 
 #############################################
 
-def _mk_slice_stack_parser():
+def _mk_stacks_to_volume_parser():
     p = ArgParser(add_help=False)
     p.add_argument("--input-resolution", dest="input_resolution",
                    type=float,
-                   default=None,
+                   default=0.00137,
+                   #TODO write help for standard and high resolution (get this from Dulcie)
                    help="")
     p.add_argument("--output-resolution", dest="output_resolution",
                    type=float,
                    default=None,
                    help="")
-    p.add_argument("--slice-gap", dest="slice_gap",
-                   type=float,
-                   default=None,
-                   help="")
-    p.add_argument("--input-directory", dest="input_directory",
-                   type=str,
-                   default=None,
-                   help="")
-    p.add_argument("--output-directory", dest="output_directory",
-                   type=str,
-                   default=None,
-                   help="")
     return p
 
-slice_stack_parser = AnnotatedParser(parser=BaseParser(_mk_slice_stack_parser(), "slice_stack"),
-                                      namespace="slice_stack")
+stacks_to_volume_parser = AnnotatedParser(parser=BaseParser(_mk_stacks_to_volume_parser(), "stacks_to_volume"),
+                                      namespace="stacks_to_volume")

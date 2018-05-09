@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+import os
+print (os.environ.copy())
 
 from pyminc.volumes.factory import *
 import numpy as np

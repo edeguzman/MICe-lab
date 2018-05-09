@@ -12,6 +12,7 @@ def TV_stitch_wrap(brain_directory: FileAtom,
                    application_options,
                    TV_stitch_options,
                    output_dir: str):
+
     stage = CmdStage(inputs=(brain_directory,), outputs=tuple(stitched),
                      cmd=['TV_stitch.py', '--clobber', '--keeptmp',
                           '--verbose' if application_options.verbose else '',
@@ -78,4 +79,23 @@ def cellprofiler_wrap(stitched: List[FileAtom],
 
     return Result(stages=s, output=(overLays, smooths, microglias))
 
-# cellprofiler -c -r -p /hpf/largeprojects/MICe/nwang/Salter_Microglia_2x2x2/cellprofiler/Batch_data.h5 -f 1 -l 1
+def stacks_to_volume( slices: List[FileAtom],
+                      volume: FileAtom,
+                      z_resolution: float,
+                      stacks_to_volume_options,
+                      output_dir: str):
+    stage = CmdStage(inputs=tuple(slices), outputs=(volume,),
+                     cmd=['stacks_to_volume.py',
+                          '--input-resolution %s' % stacks_to_volume_options.input_resolution,
+                          '--output-resolution %s' % stacks_to_volume_options.output_resolution,
+                          '--slice-gap %s' % z_resolution,
+                          '%s %s' % (slices[0].path, slices[1].path), #TODO ALL SLICES
+                          '%s' % volume.path],
+                     log_file=os.path.join(output_dir, "stacks_to_volume.log"))
+    print(stage.render())
+
+    return Result(stages=Stages([stage]), output=(volume))
+
+# stacks_to_volume.py --input-resolution 0.00137 --output-resolution 0.025 --slice-gap 0.075
+# /hpf/largeprojects/MICe/nwang/Salter_Microglia_2x2x2/output/2x2x2_cellprofiler/mgliaGFP_sample1/*microglia*
+# /hpf/largeprojects/MICe/nwang/Salter_Microglia_2x2x2/output/2x2x2_microglia_stacked/mgliaGFP_sample1_microglia_stacked.mnc

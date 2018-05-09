@@ -211,8 +211,11 @@ def get_params(input,):
     # read #X,#Y,#Zpeizo from first Mosaic text file
     TVscanfile = direclist[0] + '/' + 'Mosaic_' + direclist[0].rsplit('/')[-1] + '.txt'
     TVparamdict = TV_parameters(TVscanfile)
-    (N_x, N_y, N_z_slices, N_z_piezo) = (TVparamdict['mcolumns'], TVparamdict['mrows'], \
-                                         TVparamdict['sections'], [1, TVparamdict['layers']][TVparamdict['Zscan']])
+    (N_x, N_y, N_z_slices, N_z_piezo, z_resolution) = (TVparamdict['mcolumns'],
+                                         TVparamdict['mrows'],
+                                         TVparamdict['sections'],
+                                         [1, TVparamdict['layers']][TVparamdict['Zscan']],
+                                         TVparamdict['sectionres']/1000)
     if (len(direclist) != N_z_slices):
         print("Mismatch in Mosaic file 'sections' (%d) and number of identified directories (%d)" % (
         N_z_slices, len(direclist)))
@@ -225,7 +228,7 @@ def get_params(input,):
     except FatalError as e:
         print('Error(%s):' % program_name, e.msg)
         raise SystemExit
-    return N_x, N_y, N_z_slices
+    return N_x, N_y, N_z_slices, z_resolution
 
 def generate_preprocessed_images(inputdirectory,starts=[None,None,None],ends=[None,None,None],channelflag=1,\
                                  imgftype='tif',fastpiezoloop=False,gradcombine=False,im=False,

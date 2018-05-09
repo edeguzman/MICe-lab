@@ -29,9 +29,5 @@ setup(name="MICe-lab",
                'mri_python/mri_recon.py',
                'mri_python/fse3dmice_recon.py',
                'tissvis/tissue_vision.py',
-               #TODO remove these once the entire pipeline is completed
-               'tissvis/TV_stitch.py',
-               'tissvis/slice_stack.py',
-               'tissvis/stacks_to_volume.py',
                ],
       )
