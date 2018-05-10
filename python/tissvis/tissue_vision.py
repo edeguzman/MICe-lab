@@ -10,7 +10,9 @@ import pandas as pd
 from pydpiper.core.stages import Stages, Result
 from pydpiper.core.arguments import CompoundParser, AnnotatedParser
 from pydpiper.execution.application import mk_application
-from pydpiper.core.files import FileAtom, explode
+from pydpiper.core.files import FileAtom
+from pydpiper.minc.files import MincAtom
+from pydpiper.minc.registration import autocrop
 
 from tissvis.arguments import TV_stitch_parser, cellprofiler_parser, stacks_to_volume_parser
 from tissvis.reconstruction import TV_stitch_wrap, cellprofiler_wrap, stacks_to_volume
@@ -21,17 +23,10 @@ class Brain(object):
                  brain_directory: FileAtom,
                  name: str,
                  slice_stitched: FileAtom = None,
-                 slice_directory: FileAtom = None,
-                 x: int = None,
-                 y: int = None,
-                 z: int = None) -> None:
+                 ) -> None:
         self.brain_directory = brain_directory
         self.name = name
         self.slice_stitched = slice_stitched
-        self.slice_directory = slice_directory
-        self.x = x
-        self.y = y
-        self.z = z
 
 
 def get_brains(options):
@@ -60,17 +55,18 @@ def tissue_vision_pipeline(options):
     # Hold results obtained in the loop
     all_TV_stitch_results = []
     all_cellprofiler_results = []
+    all_binary_volume_results = []
 
 #############################
 # Step 1: Run TV_stitch.py
 #############################
-    for brain in brains: #TODO remove this property
-        brain.slice_directory = FileAtom(os.path.join(output_dir, pipeline_name + "_stitched", brain.name))
+    for brain in brains:
+        slice_directory = os.path.join(output_dir, pipeline_name + "_stitched", brain.name)
 
         stitched = []
         brain.x, brain.y, brain.z, brain.z_resolution = get_params(os.path.join(brain.brain_directory.path, brain.name))
         for z in range (1, brain.z+1):
-            brain.slice_stitched = FileAtom(os.path.join(brain.slice_directory.path, brain.name + "_Z%04d.tif" % z))
+            brain.slice_stitched = FileAtom(os.path.join(slice_directory, brain.name + "_Z%04d.tif" % z))
             stitched.append(brain.slice_stitched)
 
         TV_stitch_result = s.defer(TV_stitch_wrap(brain_directory = brain.brain_directory,
@@ -86,30 +82,29 @@ def tissue_vision_pipeline(options):
 # Step 2: Run cellprofiler
 #############################
 
-# TODO remove this property
         brain.cp_directory = os.path.join(output_dir, pipeline_name + "_cellprofiler", brain.name)
         brain.batch_data = FileAtom(os.path.join(brain.cp_directory,"Batch_data.h5"))
 
         overLays = []
         smooths = []
-        microglias = []
+        binaries = []
         for z in range(1, brain.z + 1):
             brain.slice_overLay = FileAtom(
                 os.path.join(brain.cp_directory, brain.name + "_Z%04d_overLay.tiff" % z))
             brain.slice_smooth = FileAtom(
                 os.path.join(brain.cp_directory, brain.name + "_Z%04d_smooth.tiff" % z))
-            brain.slice_microglia = FileAtom(
+            brain.slice_binary = FileAtom(
                 os.path.join(brain.cp_directory, brain.name + "_Z%04d_microglia.tiff" % z))
             overLays.append(brain.slice_overLay)
             smooths.append(brain.slice_smooth)
-            microglias.append(brain.slice_microglia)
+            binaries.append(brain.slice_binary)
 
         cellprofiler_result = s.defer(cellprofiler_wrap(stitched = TV_stitch_result,
                                                               cellprofiler_pipeline = cppline,
                                                               batch_data = brain.batch_data,
-                                                              overLays = brain.slice_overLay,
-                                                              smooths = brain.slice_smooth,
-                                                              microglias = brain.slice_microglia,
+                                                              overLays = overLays,
+                                                              smooths = smooths,
+                                                              binaries = binaries,
                                                               Zend = brain.z,
                                                               output_dir = output_dir,
                                                               env_vars = env_vars
@@ -119,16 +114,22 @@ def tissue_vision_pipeline(options):
 #############################
 # Step 3: Run stacks_to_volume.py
 #############################
-        microglia_volume = FileAtom(os.path.join(output_dir, pipeline_name + "_microglia_stacked",
+        binary_volume = MincAtom(os.path.join(output_dir, pipeline_name + "_microglia_stacked",
                                                  brain.name + "_microglia_stacked.mnc"))
 
-        microglia_slices_to_volume_results = s.defer(stacks_to_volume(
-            slices = microglias,
-            volume = microglia_volume,
+        binary_slices_to_volume_results = s.defer(stacks_to_volume(
+            slices = binaries,
+            volume = binary_volume,
             stacks_to_volume_options=options.tissue_vision.stacks_to_volume,
             z_resolution=brain.z_resolution,
             output_dir=output_dir
             ))
+        all_binary_volume_results.append(binary_slices_to_volume_results)
+
+#############################
+# Step 4: Run autocrop to resample to isotropic
+#############################
+
 
     return Result(stages=s, output=Namespace(TV_stitch_output=all_TV_stitch_results,
                                              cellprofiler_output=all_cellprofiler_results
@@ -150,3 +151,7 @@ tissue_vision_application = mk_application(
 
 if __name__ == "__main__":
     tissue_vision_application()
+
+# autocrop -clobber -isostep 0.100
+# /hpf/largeprojects/MICe/nwang/Salter_Microglia_2x2x2/output/2x2x2_microglia_stacked/mgliaGFP_sample1_microglia_stacked.mnc
+# /hpf/largeprojects/MICe/nwang/Salter_Microglia_2x2x2/output/2x2x2_microglia_isotropic/mgliaGFP_sample1_microglia_isotropic.mnc

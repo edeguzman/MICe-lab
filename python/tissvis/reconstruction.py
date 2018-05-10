@@ -4,6 +4,7 @@ from typing import Dict, List
 
 from pydpiper.core.stages import Stages, Result, CmdStage
 from pydpiper.core.files import FileAtom
+from pydpiper.minc.files import MincAtom
 
 
 def TV_stitch_wrap(brain_directory: FileAtom,
@@ -49,9 +50,9 @@ def TV_stitch_wrap(brain_directory: FileAtom,
 def cellprofiler_wrap(stitched: List[FileAtom],
                        cellprofiler_pipeline: FileAtom,
                        batch_data: FileAtom,
-                       overLays: FileAtom,
-                       smooths: FileAtom,
-                       microglias: FileAtom,
+                       overLays: List[FileAtom],
+                       smooths: List[FileAtom],
+                       binaries: List[FileAtom],
                        Zend: int,
                        output_dir: str,
                        env_vars: Dict[str, str]):
@@ -67,7 +68,7 @@ def cellprofiler_wrap(stitched: List[FileAtom],
     print(stage.render())
     s.add(stage)
 
-    stage = CmdStage(inputs=(batch_data,), outputs=(overLays, smooths, microglias),
+    stage = CmdStage(inputs=(batch_data,), outputs=(overLays + smooths + binaries),
                      cmd=['cellprofiler', '-c', '-r',
                           '-p %s' % batch_data.path,
                           '-f %s' % 1,
@@ -77,10 +78,10 @@ def cellprofiler_wrap(stitched: List[FileAtom],
     print(stage.render())
     s.add(stage)
 
-    return Result(stages=s, output=(overLays, smooths, microglias))
+    return Result(stages=s, output=(overLays, smooths, binaries))
 
 def stacks_to_volume( slices: List[FileAtom],
-                      volume: FileAtom,
+                      volume: MincAtom,
                       z_resolution: float,
                       stacks_to_volume_options,
                       output_dir: str):
