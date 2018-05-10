@@ -95,7 +95,3 @@ def stacks_to_volume( slices: List[FileAtom],
     print(stage.render())
 
     return Result(stages=Stages([stage]), output=(volume))
-
-# stacks_to_volume.py --input-resolution 0.00137 --output-resolution 0.025 --slice-gap 0.075
-# /hpf/largeprojects/MICe/nwang/Salter_Microglia_2x2x2/output/2x2x2_cellprofiler/mgliaGFP_sample1/*microglia*
-# /hpf/largeprojects/MICe/nwang/Salter_Microglia_2x2x2/output/2x2x2_microglia_stacked/mgliaGFP_sample1_microglia_stacked.mnc
