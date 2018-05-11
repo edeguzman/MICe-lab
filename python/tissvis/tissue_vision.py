@@ -122,6 +122,7 @@ def tissue_vision_pipeline(options):
             volume = binary_volume,
             stacks_to_volume_options=options.tissue_vision.stacks_to_volume,
             z_resolution=brain.z_resolution,
+            uniform_sum = True,
             output_dir=output_dir
             ))
         all_binary_volume_results.append(binary_slices_to_volume_results)
@@ -129,7 +130,14 @@ def tissue_vision_pipeline(options):
 #############################
 # Step 4: Run autocrop to resample to isotropic
 #############################
+        binary_volume_isotropic = MincAtom(os.path.join(output_dir, pipeline_name + "_microglia_stacked_isotropic",
+                                                 brain.name + "_microglia_stacked_isotropic.mnc"))
 
+        binary_volume_isotropic_results = s.defer(autocrop(
+            isostep = options.tissue_vision.stacks_to_volume.plane_resolution,
+            img = binary_volume,
+            autocropped = binary_volume_isotropic,
+            nearest_neighbour = True))
 
     return Result(stages=s, output=Namespace(TV_stitch_output=all_TV_stitch_results,
                                              cellprofiler_output=all_cellprofiler_results

@@ -133,7 +133,7 @@ def _mk_stacks_to_volume_parser():
                    default=0.00137,
                    #TODO write help for standard and high resolution (get this from Dulcie)
                    help="")
-    p.add_argument("--output-resolution", dest="output_resolution",
+    p.add_argument("--plane-resolution", dest="plane_resolution",
                    type=float,
                    default=None,
                    help="")

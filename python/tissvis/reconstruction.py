@@ -84,12 +84,14 @@ def stacks_to_volume( slices: List[FileAtom],
                       volume: MincAtom,
                       z_resolution: float,
                       stacks_to_volume_options,
-                      output_dir: str):
+                      output_dir: str,
+                      uniform_sum: bool = False):
     stage = CmdStage(inputs=tuple(slices), outputs=(volume,),
                      cmd=['stacks_to_volume.py',
                           '--input-resolution %s' % stacks_to_volume_options.input_resolution,
-                          '--output-resolution %s' % stacks_to_volume_options.output_resolution,
+                          '--output-resolution %s' % stacks_to_volume_options.plane_resolution,
                           '--slice-gap %s' % z_resolution,
+                          '--uniform-sum' if uniform_sum else '',
                           '%s %s' % (slices[0].path, slices[1].path), #TODO ALL SLICES
                           '%s' % volume.path],
                      log_file=os.path.join(output_dir, "stacks_to_volume.log"))
