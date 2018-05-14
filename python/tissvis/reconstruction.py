@@ -92,7 +92,7 @@ def stacks_to_volume( slices: List[FileAtom],
                           '--output-resolution %s' % stacks_to_volume_options.plane_resolution,
                           '--slice-gap %s' % z_resolution,
                           '--uniform-sum' if uniform_sum else '',
-                          '%s %s' % (slices[0].path, slices[1].path), #TODO ALL SLICES
+                          ' '.join(slice.path for slice in slices.__iter__()), #is this hacky or the right way?
                           '%s' % volume.path],
                      log_file=os.path.join(output_dir, "stacks_to_volume.log"))
     print(stage.render())
