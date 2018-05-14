@@ -56,6 +56,7 @@ def tissue_vision_pipeline(options):
     all_TV_stitch_results = []
     all_cellprofiler_results = []
     all_binary_volume_results = []
+    all_smooth_volume_results = []
 
 #############################
 # Step 1: Run TV_stitch.py
@@ -114,8 +115,21 @@ def tissue_vision_pipeline(options):
 #############################
 # Step 3: Run stacks_to_volume.py
 #############################
+        smooth_volume = MincAtom(os.path.join(output_dir, pipeline_name + "_smooth_stacked",
+                                              brain.name + "_smooth_stacked.mnc"))
+
+        smooth_slices_to_volume_results = s.defer(stacks_to_volume(
+            slices = smooths,
+            volume = smooth_volume,
+            stacks_to_volume_options=options.tissue_vision.stacks_to_volume,
+            uniform_sum=False,
+            z_resolution=brain.z_resolution,
+            output_dir=output_dir
+            ))
+        all_smooth_volume_results.append(smooth_slices_to_volume_results)
+
         binary_volume = MincAtom(os.path.join(output_dir, pipeline_name + "_microglia_stacked",
-                                                 brain.name + "_microglia_stacked.mnc"))
+                                                brain.name + "_microglia_stacked.mnc"))
 
         binary_slices_to_volume_results = s.defer(stacks_to_volume(
             slices = binaries,
@@ -159,7 +173,3 @@ tissue_vision_application = mk_application(
 
 if __name__ == "__main__":
     tissue_vision_application()
-
-# autocrop -clobber -isostep 0.100
-# /hpf/largeprojects/MICe/nwang/Salter_Microglia_2x2x2/output/2x2x2_microglia_stacked/mgliaGFP_sample1_microglia_stacked.mnc
-# /hpf/largeprojects/MICe/nwang/Salter_Microglia_2x2x2/output/2x2x2_microglia_isotropic/mgliaGFP_sample1_microglia_isotropic.mnc
