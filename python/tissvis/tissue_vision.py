@@ -117,7 +117,6 @@ def tissue_vision_pipeline(options):
 #############################
         smooth_volume = MincAtom(os.path.join(output_dir, pipeline_name + "_smooth_stacked",
                                               brain.name + "_smooth_stacked.mnc"))
-
         smooth_slices_to_volume_results = s.defer(stacks_to_volume(
             slices = smooths,
             volume = smooth_volume,
@@ -128,9 +127,9 @@ def tissue_vision_pipeline(options):
             ))
         all_smooth_volume_results.append(smooth_slices_to_volume_results)
 
+
         binary_volume = MincAtom(os.path.join(output_dir, pipeline_name + "_microglia_stacked",
                                                 brain.name + "_microglia_stacked.mnc"))
-
         binary_slices_to_volume_results = s.defer(stacks_to_volume(
             slices = binaries,
             volume = binary_volume,
@@ -144,9 +143,17 @@ def tissue_vision_pipeline(options):
 #############################
 # Step 4: Run autocrop to resample to isotropic
 #############################
+        smooth_volume_isotropic = MincAtom(os.path.join(output_dir, pipeline_name + "_smooth_stacked_isotropic",
+                                                        brain.name + "_smooth_stacked_isotropic.mnc"))
+        smooth_volume_isotropic_results = s.defer(autocrop(
+            isostep = options.tissue_vision.stacks_to_volume.plane_resolution,
+            img = smooth_volume,
+            autocropped = smooth_volume_isotropic
+        ))
+
+
         binary_volume_isotropic = MincAtom(os.path.join(output_dir, pipeline_name + "_microglia_stacked_isotropic",
                                                  brain.name + "_microglia_stacked_isotropic.mnc"))
-
         binary_volume_isotropic_results = s.defer(autocrop(
             isostep = options.tissue_vision.stacks_to_volume.plane_resolution,
             img = binary_volume,
@@ -156,6 +163,11 @@ def tissue_vision_pipeline(options):
     return Result(stages=s, output=Namespace(TV_stitch_output=all_TV_stitch_results,
                                              cellprofiler_output=all_cellprofiler_results
                                              ))
+
+#############################
+# Step 5: Run autocrop to pad the images
+#############################
+
 
 #############################
 # Combine Parser & Make Application
