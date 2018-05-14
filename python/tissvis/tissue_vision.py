@@ -14,7 +14,7 @@ from pydpiper.core.files import FileAtom
 from pydpiper.minc.files import MincAtom
 from pydpiper.minc.registration import autocrop
 
-from tissvis.arguments import TV_stitch_parser, cellprofiler_parser, stacks_to_volume_parser
+from tissvis.arguments import TV_stitch_parser, cellprofiler_parser, stacks_to_volume_parser, autocrop_parser
 from tissvis.reconstruction import TV_stitch_wrap, cellprofiler_wrap, stacks_to_volume
 from tissvis.TV_stitch import get_params
 
@@ -57,6 +57,10 @@ def tissue_vision_pipeline(options):
     all_cellprofiler_results = []
     all_binary_volume_results = []
     all_smooth_volume_results = []
+    all_binary_volume_isotropic_results = []
+    all_smooth_volume_isotropic_results = []
+    all_smooth_pad_results = []
+    all_binary_pad_results = []
 
 #############################
 # Step 1: Run TV_stitch.py
@@ -150,7 +154,7 @@ def tissue_vision_pipeline(options):
             img = smooth_volume,
             autocropped = smooth_volume_isotropic
         ))
-
+        all_smooth_volume_isotropic_results.append(smooth_volume_isotropic_results)
 
         binary_volume_isotropic = MincAtom(os.path.join(output_dir, pipeline_name + "_microglia_stacked_isotropic",
                                                  brain.name + "_microglia_stacked_isotropic.mnc"))
@@ -159,21 +163,46 @@ def tissue_vision_pipeline(options):
             img = binary_volume,
             autocropped = binary_volume_isotropic,
             nearest_neighbour = True))
+        all_binary_volume_isotropic_results.append(binary_volume_isotropic_results)
+
+#############################
+# Step 5: Run autocrop to pad the images
+#############################
+        x_pad = options.tissue_vision.autocrop.x_pad
+        y_pad = options.tissue_vision.autocrop.y_pad
+        z_pad = options.tissue_vision.autocrop.z_pad
+
+        smooth_padded = MincAtom(os.path.join(output_dir, pipeline_name + "_smooth_padded",
+                                                        brain.name + "_smooth_padded.mnc"))
+        smooth_pad_results = s.defer(autocrop(
+            img = smooth_volume_isotropic,
+            autocropped = smooth_padded,
+            x_pad = x_pad,
+            y_pad = y_pad,
+            z_pad = z_pad
+        ))
+        all_smooth_pad_results.append(smooth_pad_results)
+
+        binary_padded = MincAtom(os.path.join(output_dir, pipeline_name + "_binary_padded",
+                                                        brain.name + "_binary_padded.mnc"))
+        binary_pad_results = s.defer(autocrop(
+            img = binary_volume_isotropic,
+            autocropped = binary_padded,
+            x_pad = x_pad,
+            y_pad = y_pad,
+            z_pad = z_pad
+        ))
+        all_binary_pad_results.append(binary_pad_results)
 
     return Result(stages=s, output=Namespace(TV_stitch_output=all_TV_stitch_results,
                                              cellprofiler_output=all_cellprofiler_results
                                              ))
 
 #############################
-# Step 5: Run autocrop to pad the images
-#############################
-
-
-#############################
 # Combine Parser & Make Application
 #############################
 
-tissue_vision_parser = CompoundParser([TV_stitch_parser, cellprofiler_parser, stacks_to_volume_parser])
+tissue_vision_parser = CompoundParser([TV_stitch_parser, cellprofiler_parser, stacks_to_volume_parser, autocrop_parser])
 
 tissue_vision_application = mk_application(
     parsers=[AnnotatedParser(parser=tissue_vision_parser, namespace='tissue_vision')],
