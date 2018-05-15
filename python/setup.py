@@ -29,5 +29,7 @@ setup(name="MICe-lab",
                'mri_python/mri_recon.py',
                'mri_python/fse3dmice_recon.py',
                'tissvis/tissue_vision.py',
+               'tissvis/TV_stitch.py',
+               'tissvis/stacks_to_volume.py'
                ],
       )

@@ -14,6 +14,8 @@ from pydpiper.core.files import FileAtom
 from pydpiper.minc.files import MincAtom
 from pydpiper.minc.registration import autocrop
 
+from pydpiper.pipelines.MBM import mbm, MBMConf, mk_mbm_parser
+
 from tissvis.arguments import TV_stitch_parser, cellprofiler_parser, stacks_to_volume_parser, autocrop_parser
 from tissvis.reconstruction import TV_stitch_wrap, cellprofiler_wrap, stacks_to_volume
 from tissvis.TV_stitch import get_params
