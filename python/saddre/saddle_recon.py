@@ -73,7 +73,8 @@ def saddle_recon_pipeline(options):
     # Loop through all the coils
     for icoil in coil_list:
         icoil_imgs = numpy.array(imgs)[numpy.where(numpy.array(varian_coil_output) == str(icoil))[0]]
-        icoil_varian_mnc_output = numpy.array(varian_mnc_output)[numpy.where(numpy.array(varian_coil_output) == str(icoil))[0]]
+        icoil_varian_mnc_output = numpy.array(varian_mnc_output)[numpy.where(numpy.array(varian_coil_output) ==
+                                                                             str(icoil))[0]]
 
         ###########################
         # Step 2: lsq6 registration

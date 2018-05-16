@@ -8,12 +8,11 @@ from typing import Dict, List
 import pandas as pd
 
 from pydpiper.core.stages import Stages, Result
-from pydpiper.core.arguments import CompoundParser, AnnotatedParser
+from pydpiper.core.arguments import CompoundParser, AnnotatedParser, lsq6_parser
 from pydpiper.execution.application import mk_application
 from pydpiper.core.files import FileAtom
 from pydpiper.minc.files import MincAtom
 from pydpiper.minc.registration import autocrop
-
 from pydpiper.pipelines.MBM import mbm, MBMConf, mk_mbm_parser
 
 from tissvis.arguments import TV_stitch_parser, cellprofiler_parser, stacks_to_volume_parser, autocrop_parser
@@ -168,7 +167,7 @@ def tissue_vision_pipeline(options):
         all_binary_volume_isotropic_results.append(binary_volume_isotropic_results)
 
 #############################
-# Step 5: Run autocrop to pad the images
+# Step 5: Run autocrop to pad the isotropic images
 #############################
         x_pad = options.tissue_vision.autocrop.x_pad
         y_pad = options.tissue_vision.autocrop.y_pad
@@ -196,6 +195,26 @@ def tissue_vision_pipeline(options):
         ))
         all_binary_pad_results.append(binary_pad_results)
 
+#############################
+# Step 6: Run MBM.py with the binaries as "label" files.
+#############################
+    lsq6_dir = os.path.join(output_dir, pipeline_name + "_lsq6")
+
+    #TODO give the user a notice of this?
+    options.tissue_vision.lsq6.replace(nuc = False)
+    options.tissue_vision.lsq6.replace(inormalize = False)
+
+    targets = registration_targets(lsq6_conf=options.tissue_vision.lsq6,
+                                   app_conf=options.application,
+                                   first_input_file=all_smooth_pad_results[0])
+
+    lsq6_result = s.defer(lsq6_nuc_inorm(imgs=all_smooth_pad_results,
+                                         resolution=options.tissue_vision.stacks_to_volume.plane_resolution,
+                                         #TODO IS THIS RIGHT?
+                                         registration_targets=targets,
+                                         lsq6_dir=lsq6_dir,
+                                         lsq6_options=options.lsq6))
+
     return Result(stages=s, output=Namespace(TV_stitch_output=all_TV_stitch_results,
                                              cellprofiler_output=all_cellprofiler_results
                                              ))
@@ -204,7 +223,8 @@ def tissue_vision_pipeline(options):
 # Combine Parser & Make Application
 #############################
 
-tissue_vision_parser = CompoundParser([TV_stitch_parser, cellprofiler_parser, stacks_to_volume_parser, autocrop_parser])
+tissue_vision_parser = CompoundParser([TV_stitch_parser, cellprofiler_parser, stacks_to_volume_parser, autocrop_parser,
+                                       lsq6_parser])
 
 tissue_vision_application = mk_application(
     parsers=[AnnotatedParser(parser=tissue_vision_parser, namespace='tissue_vision')],
