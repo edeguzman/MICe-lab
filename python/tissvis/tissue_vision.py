@@ -198,22 +198,22 @@ def tissue_vision_pipeline(options):
 #############################
 # Step 6: Run MBM.py with the binaries as "label" files.
 #############################
-    lsq6_dir = os.path.join(output_dir, pipeline_name + "_lsq6")
-
-    #TODO give the user a notice of this?
-    options.tissue_vision.lsq6.replace(nuc = False)
-    options.tissue_vision.lsq6.replace(inormalize = False)
-
-    targets = registration_targets(lsq6_conf=options.tissue_vision.lsq6,
-                                   app_conf=options.application,
-                                   first_input_file=all_smooth_pad_results[0])
-
-    lsq6_result = s.defer(lsq6_nuc_inorm(imgs=all_smooth_pad_results,
-                                         resolution=options.tissue_vision.stacks_to_volume.plane_resolution,
-                                         #TODO IS THIS RIGHT?
-                                         registration_targets=targets,
-                                         lsq6_dir=lsq6_dir,
-                                         lsq6_options=options.lsq6))
+    # lsq6_dir = os.path.join(output_dir, pipeline_name + "_lsq6")
+    #
+    # #TODO give the user a notice of this?
+    # options.tissue_vision.lsq6.replace(nuc = False)
+    # options.tissue_vision.lsq6.replace(inormalize = False)
+    #
+    # targets = registration_targets(lsq6_conf=options.tissue_vision.lsq6,
+    #                                app_conf=options.application,
+    #                                first_input_file=all_smooth_pad_results[0])
+    #
+    # lsq6_result = s.defer(lsq6_nuc_inorm(imgs=all_smooth_pad_results,
+    #                                      resolution=options.tissue_vision.stacks_to_volume.plane_resolution,
+    #                                      #TODO IS THIS RIGHT?
+    #                                      registration_targets=targets,
+    #                                      lsq6_dir=lsq6_dir,
+    #                                      lsq6_options=options.lsq6))
 
     return Result(stages=s, output=Namespace(TV_stitch_output=all_TV_stitch_results,
                                              cellprofiler_output=all_cellprofiler_results

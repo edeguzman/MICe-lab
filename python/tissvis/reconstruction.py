@@ -68,15 +68,16 @@ def cellprofiler_wrap(stitched: List[FileAtom],
     print(stage.render())
     s.add(stage)
 
-    stage = CmdStage(inputs=(batch_data,), outputs=(overLays + smooths + binaries),
-                     cmd=['cellprofiler', '-c', '-r',
-                          '-p %s' % batch_data.path,
-                          '-f %s' % 1,
-                          '-l %s' % Zend],
-                     log_file=os.path.join(output_dir, "cellprofiler.log"),
-                     env_vars=env_vars)
-    print(stage.render())
-    s.add(stage)
+    for z in range (1, Zend):
+        stage = CmdStage(inputs=(batch_data,), outputs=(overLays + smooths + binaries),
+                         cmd=['cellprofiler', '-c', '-r',
+                              '-p %s' % batch_data.path,
+                              '-f %s' % z,
+                              '-l %s' % z + 1],
+                         log_file=os.path.join(output_dir, "cellprofiler.log"),
+                         env_vars=env_vars)
+        print(stage.render())
+        s.add(stage)
 
     return Result(stages=s, output=(overLays, smooths, binaries))
 
