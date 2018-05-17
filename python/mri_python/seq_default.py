@@ -58,6 +58,10 @@ class seq_reconstruction():
             self.kspace = rgf.petable_orderedpair_reordering(self.kspace,petable_arrays=('t1','t2'),petable_name=self.petable_name,\
                                                           matrix=(self.inputAcq.npe,self.inputAcq.npe2))
         self.kspace = rgf.fov_adjustment(self.kspace,self.options,self.inputAcq,imouse)
+        if ((self.inputAcq.platform=="Bruker") and (self.inputAcq.nD==2)):
+            print("Reordering multislice experiment...")
+            slice_order = rgf.get_dict_value(self.inputAcq.method_param_dict,"PVM_OjbOrderList",arange(self.inputAcq.nslices))
+            self.kspace[...,:,:,:] = self.kspace[...,slice_order,:,:]
         if self.options.dcshiftcorr: #do we use this?
             self.kspace,dcoff = rgf.DCartcorr(self.kspace,self.param_dict)
         if self.options.fermi_ellipse:
