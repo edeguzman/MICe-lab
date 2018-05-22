@@ -119,6 +119,14 @@ def _mk_cellprofiler_parser():
                    type=str,
                    default=None,
                    help="Set your JAVA_HOME environment variable for cellprofiler using this flag.")
+    p.add_argument("--binary-name", dest="binary_name",
+                   type=str,
+                   default=None,
+                   help="Specify the name of the binary images outputted by cellprofiler.")
+    p.add_argument("--anatomical-name", dest="anatomical_name",
+                   type=str,
+                   default=None,
+                   help="Specify the name of the anatomical images outputted by cellprofiler.")
     return p
 
 cellprofiler_parser = AnnotatedParser(parser=BaseParser(_mk_cellprofiler_parser(), "cellprofiler"),

@@ -223,8 +223,7 @@ def tissue_vision_pipeline(options):
 # Combine Parser & Make Application
 #############################
 
-tissue_vision_parser = CompoundParser([TV_stitch_parser, cellprofiler_parser, stacks_to_volume_parser, autocrop_parser,
-                                       lsq6_parser])
+tissue_vision_parser = CompoundParser([TV_stitch_parser, cellprofiler_parser, stacks_to_volume_parser, autocrop_parser])
 
 tissue_vision_application = mk_application(
     parsers=[AnnotatedParser(parser=tissue_vision_parser, namespace='tissue_vision')],

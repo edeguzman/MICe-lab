@@ -16,7 +16,7 @@ def TV_stitch_wrap(brain_directory: FileAtom,
 
     stage = CmdStage(inputs=(brain_directory,), outputs=tuple(stitched),
                      cmd=['TV_stitch.py', '--clobber', '--keeptmp',
-                          '--verbose' if application_options.verbose else '',
+                          '--verbose',
                           '--save_positions_file %s_positions.txt' % brain_name
                           if TV_stitch_options.save_positions_file else "",
                           '--scaleoutput %s' % TV_stitch_options.scale_output if TV_stitch_options.scale_output else '',
@@ -43,7 +43,6 @@ def TV_stitch_wrap(brain_directory: FileAtom,
                           os.path.join(brain_directory.path, brain_name),
                           os.path.join(stitched[0].dir, brain_name)],
                      log_file = os.path.join(output_dir, "TV_stitch.log"))
-    print(stage.render())
 
     return Result(stages=Stages([stage]), output=(stitched))
 
@@ -65,18 +64,16 @@ def cellprofiler_wrap(stitched: List[FileAtom],
                           '-o %s' % batch_data.dir],
                      log_file = os.path.join(output_dir,"cellprofiler.log"),
                      env_vars = env_vars)
-    print(stage.render())
     s.add(stage)
 
     for z in range (1, Zend):
-        stage = CmdStage(inputs=(batch_data,), outputs=(overLays + smooths + binaries),
+        stage = CmdStage(inputs=(batch_data,), outputs=(overLays[z-1], smooths[z-1], binaries[z-1]),
                          cmd=['cellprofiler', '-c', '-r',
                               '-p %s' % batch_data.path,
                               '-f %s' % z,
-                              '-l %s' % z + 1],
+                              '-l %s' % z],
                          log_file=os.path.join(output_dir, "cellprofiler.log"),
                          env_vars=env_vars)
-        print(stage.render())
         s.add(stage)
 
     return Result(stages=s, output=(overLays, smooths, binaries))
@@ -96,6 +93,5 @@ def stacks_to_volume( slices: List[FileAtom],
                           ' '.join(slice.path for slice in slices.__iter__()), #is this hacky or the right way?
                           '%s' % volume.path],
                      log_file=os.path.join(output_dir, "stacks_to_volume.log"))
-    print(stage.render())
 
     return Result(stages=Stages([stage]), output=(volume))
