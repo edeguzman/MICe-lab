@@ -1,3 +1,7 @@
+New in version 0.18
+===================
+- small Python 3 changes: fix dynamic imports for mri_recon.py script
+
 New in version 0.17
 ===================
 - added FSE recon script

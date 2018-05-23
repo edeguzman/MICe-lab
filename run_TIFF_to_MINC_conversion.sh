@@ -1,7 +1,17 @@
-export PATH=/OGS/bin/linux-x64:/axiom2/projects/software/arch/linux-xenial-xerus/bin/:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/micehome/matthijs/64-bit/bin:/micehome/matthijs/scripts:/axiom2/projects/software/arch/linux-xenial-xerus/src/mrtrix3/release/bin
-export PYTHONPATH=/axiom2/projects/software/arch/linux-xenial-xerus/python
-export LD_LIBRARY_PATH=/axiom2/projects/software/arch/linux-xenial-xerus/lib/:/axiom2/projects/software/arch/linux-xenial-xerus/lib/InsightToolkit/:/axiom2/projects/software/arch/linux-xenial-xerus/src/mrtrix3/release/lib
-export PERL5LIB=/axiom2/projects/software/arch/linux-xenial-xerus/perl/
+#!/bin/bash
+#export PATH=/axiom2/projects/software/arch/linux-xenial-xerus/bin/:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/micehome/matthijs/64-bit/bin:/micehome/matthijs/scripts:/axiom2/projects/software/arch/linux-xenial-xerus/src/mrtrix3/release/bin
+#export PYTHONPATH=/axiom2/projects/software/arch/linux-xenial-xerus/python
+#export LD_LIBRARY_PATH=/axiom2/projects/software/arch/linux-xenial-xerus/lib/:/axiom2/projects/software/arch/linux-xenial-xerus/lib/InsightToolkit/:/axiom2/projects/software/arch/linux-xenial-xerus/src/mrtrix3/release/lib
+#export PERL5LIB=/axiom2/projects/software/arch/linux-xenial-xerus/perl/
+
+#. /etc/profile.d/mice_profile.sh
+#module use /axiom2/projects/software/arch/linux-xenial-xerus/modulefiles
+#module load mice-env/1.0.4
+#module load qbatch/1.0.1-20180425   # all replaced by:
+. /hpf/largeprojects/MICe/HPF_CT_2_MINC/MINC/setup_paths_for_conversion
+
+#convert_CT_image=$(which convert_CT_image.py)
+#module list
  
 # first find all log files that need to be processed
 logfiles=`find /hpf/largeprojects/MICe/HPF_CT_2_MINC/  -path  /hpf/largeprojects/MICe/HPF_CT_2_MINC/MINC  -prune -o -name '*.log' -print`;
@@ -35,7 +45,7 @@ for log in $logfiles;
        sleep 2
     done
   logbase=`basename $log .log`;
-  lockfile=${log}__work_in_progess__;
+  lockfile=${log}__work_in_progress__;
   main_MINC_output=/hpf/largeprojects/MICe/HPF_CT_2_MINC/MINC/${dirbase}/${logbase}.mnc;
   main_MINC_output_dir=/hpf/largeprojects/MICe/HPF_CT_2_MINC/MINC/${dirbase}/;
   move_to_tiff_dir=/hpf/largeprojects/MICe/HPF_CT_2_MINC/MINC/processed_tiff_directories/${dirbase}/;
@@ -51,6 +61,8 @@ for log in $logfiles;
     if [ -f $main_MINC_output ] ; then
       su $user -c 'echo        MINC FILE EXISTS  ***************    COMMAND: mv '${tiffdir}' '${move_to_tiff_dir}'';
       su $user -c 'mv '${tiffdir}' '${move_to_tiff_dir}''; fi;
+  else
+    echo "file ${main_MINC_output} is locked by ${lockfile}; skipping"
   fi;
 done
 
