@@ -87,6 +87,8 @@ def tissue_vision_pipeline(options):
 #############################
 # Step 2: Run cellprofiler
 #############################
+        anatomical = options.tissue_vision.cellprofiler.anatomical_name
+        binary = options.tissue_vision.cellprofiler.binary_name
 
         brain.cp_directory = os.path.join(output_dir, pipeline_name + "_cellprofiler", brain.name)
         brain.batch_data = FileAtom(os.path.join(brain.cp_directory,"Batch_data.h5"))
@@ -94,13 +96,14 @@ def tissue_vision_pipeline(options):
         overLays = []
         smooths = []
         binaries = []
+
         for z in range(1, brain.z + 1):
             brain.slice_overLay = FileAtom(
                 os.path.join(brain.cp_directory, brain.name + "_Z%04d_overLay.tiff" % z))
             brain.slice_smooth = FileAtom(
-                os.path.join(brain.cp_directory, brain.name + "_Z%04d_smooth.tiff" % z))
+                os.path.join(brain.cp_directory, brain.name + "_Z%04d_" % z + anatomical + ".tiff"))
             brain.slice_binary = FileAtom(
-                os.path.join(brain.cp_directory, brain.name + "_Z%04d_microglia.tiff" % z))
+                os.path.join(brain.cp_directory, brain.name + "_Z%04d_" % z + binary + ".tiff"))
             overLays.append(brain.slice_overLay)
             smooths.append(brain.slice_smooth)
             binaries.append(brain.slice_binary)
@@ -120,8 +123,8 @@ def tissue_vision_pipeline(options):
 #############################
 # Step 3: Run stacks_to_volume.py
 #############################
-        smooth_volume = MincAtom(os.path.join(output_dir, pipeline_name + "_smooth_stacked",
-                                              brain.name + "_smooth_stacked.mnc"))
+        smooth_volume = MincAtom(os.path.join(output_dir, pipeline_name + "_" + anatomical + "_stacked",
+                                              brain.name + "_" + anatomical + "_stacked.mnc"))
         smooth_slices_to_volume_results = s.defer(stacks_to_volume(
             slices = smooths,
             volume = smooth_volume,
@@ -133,8 +136,8 @@ def tissue_vision_pipeline(options):
         all_smooth_volume_results.append(smooth_slices_to_volume_results)
 
 
-        binary_volume = MincAtom(os.path.join(output_dir, pipeline_name + "_microglia_stacked",
-                                                brain.name + "_microglia_stacked.mnc"))
+        binary_volume = MincAtom(os.path.join(output_dir, pipeline_name + "_" + binary + "_stacked",
+                                                brain.name + "_" + binary + "_stacked.mnc"))
         binary_slices_to_volume_results = s.defer(stacks_to_volume(
             slices = binaries,
             volume = binary_volume,
@@ -148,22 +151,24 @@ def tissue_vision_pipeline(options):
 #############################
 # Step 4: Run autocrop to resample to isotropic
 #############################
-        smooth_volume_isotropic = MincAtom(os.path.join(output_dir, pipeline_name + "_smooth_stacked_isotropic",
-                                                        brain.name + "_smooth_stacked_isotropic.mnc"))
+        smooth_volume_isotropic = MincAtom(os.path.join(output_dir, pipeline_name + "_" + anatomical + "_stacked_isotropic",
+                                                        brain.name + "_" + anatomical + "_stacked_isotropic.mnc"))
         smooth_volume_isotropic_results = s.defer(autocrop(
             isostep = options.tissue_vision.stacks_to_volume.plane_resolution,
             img = smooth_volume,
-            autocropped = smooth_volume_isotropic
+            autocropped = smooth_volume_isotropic,
+            output_dir=output_dir
         ))
         all_smooth_volume_isotropic_results.append(smooth_volume_isotropic_results)
 
-        binary_volume_isotropic = MincAtom(os.path.join(output_dir, pipeline_name + "_microglia_stacked_isotropic",
-                                                 brain.name + "_microglia_stacked_isotropic.mnc"))
+        binary_volume_isotropic = MincAtom(os.path.join(output_dir, pipeline_name + "_" + binary + "_stacked_isotropic",
+                                                 brain.name + "_" + binary + "_stacked_isotropic.mnc"))
         binary_volume_isotropic_results = s.defer(autocrop(
             isostep = options.tissue_vision.stacks_to_volume.plane_resolution,
             img = binary_volume,
             autocropped = binary_volume_isotropic,
-            nearest_neighbour = True))
+            nearest_neighbour = True,
+            output_dir=output_dir))
         all_binary_volume_isotropic_results.append(binary_volume_isotropic_results)
 
 #############################
@@ -173,25 +178,27 @@ def tissue_vision_pipeline(options):
         y_pad = options.tissue_vision.autocrop.y_pad
         z_pad = options.tissue_vision.autocrop.z_pad
 
-        smooth_padded = MincAtom(os.path.join(output_dir, pipeline_name + "_smooth_padded",
-                                                        brain.name + "_smooth_padded.mnc"))
+        smooth_padded = MincAtom(os.path.join(output_dir, pipeline_name + "_" + anatomical + "_padded",
+                                                        brain.name + "_" + anatomical + "_padded.mnc"))
         smooth_pad_results = s.defer(autocrop(
             img = smooth_volume_isotropic,
             autocropped = smooth_padded,
             x_pad = x_pad,
             y_pad = y_pad,
-            z_pad = z_pad
+            z_pad = z_pad,
+            output_dir=output_dir
         ))
         all_smooth_pad_results.append(smooth_pad_results)
 
-        binary_padded = MincAtom(os.path.join(output_dir, pipeline_name + "_binary_padded",
-                                                        brain.name + "_binary_padded.mnc"))
+        binary_padded = MincAtom(os.path.join(output_dir, pipeline_name + "_" + binary + "_padded",
+                                                        brain.name + "_" + binary + "_padded.mnc"))
         binary_pad_results = s.defer(autocrop(
             img = binary_volume_isotropic,
             autocropped = binary_padded,
             x_pad = x_pad,
             y_pad = y_pad,
-            z_pad = z_pad
+            z_pad = z_pad,
+            output_dir=output_dir
         ))
         all_binary_pad_results.append(binary_pad_results)
 

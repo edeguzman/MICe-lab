@@ -5,6 +5,8 @@ from typing import Dict, List
 from pydpiper.core.stages import Stages, Result, CmdStage
 from pydpiper.core.files import FileAtom
 from pydpiper.minc.files import MincAtom
+from pyminc.volumes.factory import volumeFromFile
+from pydpiper.core.util import NamedTuple
 
 
 def TV_stitch_wrap(brain_directory: FileAtom,
@@ -46,6 +48,16 @@ def TV_stitch_wrap(brain_directory: FileAtom,
 
     return Result(stages=Stages([stage]), output=(stitched))
 
+CellprofilerMemCfg = NamedTuple("CellprofilerMemCfg",
+                            [('base_mem', float),
+                             ('mem_per_size', float)])
+
+default_cellprofiler_mem_cfg = CellprofilerMemCfg(base_mem=None, mem_per_size=5e-7)
+
+def set_memory(stage: CmdStage, mem_cfg: NamedTuple, img_size):
+    stage.setMem(20)
+    #stage.setMem(img_size * mem_cfg.mem_per_size)
+
 def cellprofiler_wrap(stitched: List[FileAtom],
                        cellprofiler_pipeline: FileAtom,
                        batch_data: FileAtom,
@@ -66,7 +78,8 @@ def cellprofiler_wrap(stitched: List[FileAtom],
                      env_vars = env_vars)
     s.add(stage)
 
-    for z in range (1, Zend):
+    for z in range (1, Zend + 1):
+
         stage = CmdStage(inputs=(batch_data,), outputs=(overLays[z-1], smooths[z-1], binaries[z-1]),
                          cmd=['cellprofiler', '-c', '-r',
                               '-p %s' % batch_data.path,
@@ -74,8 +87,11 @@ def cellprofiler_wrap(stitched: List[FileAtom],
                               '-l %s' % z],
                          log_file=os.path.join(output_dir, "cellprofiler.log"),
                          env_vars=env_vars)
-        s.add(stage)
 
+        img_size = os.stat(stitched[z-1].path).st_size
+        stage.when_runnable_hooks.append(lambda s: set_memory(s, default_cellprofiler_mem_cfg, img_size))
+
+        s.add(stage)
     return Result(stages=s, output=(overLays, smooths, binaries))
 
 def stacks_to_volume( slices: List[FileAtom],
