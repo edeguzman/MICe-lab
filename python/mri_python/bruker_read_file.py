@@ -169,7 +169,7 @@ class BrukerAcquisition():
             except TypeError:
                 crcvrs = array([rcvrnum],int)
         #complex data array
-        complex_data = zeros((len(crcvrs),fid_end-fid_start,self.nro),complex)
+        complex_data = zeros((len(crcvrs),fid_end-fid_start,int(self.nro)),complex)
         #read in data
         data_error = 0
         for k in range(len(crcvrs)):

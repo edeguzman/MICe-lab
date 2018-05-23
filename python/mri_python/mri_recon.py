@@ -104,14 +104,15 @@ def generate_option_parser_and_seq_module(recontypestring=None):
         recontypestring = sys.argv[1]
     try:
         seqmodname=os.path.basename(recontypestring)
-        seqdir=[[os.path.dirname(recontypestring)],None][os.path.dirname(recontypestring)=='']
+        seqdir=[os.path.dirname(recontypestring),None][os.path.dirname(recontypestring)=='']
         if seqdir is None:
             seqmod_specs = importlib.util.find_spec('python.mri_python.'+seqmodname)
         else:
-            loader_details = (importlib.machinery.ExtensionFileLoader,importlib.machinery.EXTENSION_SUFFIXES)
+            loader_details = (importlib.machinery.SourceFileLoader,['.py'])
             modfinder = importlib.machinery.FileFinder(seqdir, loader_details)
             seqmod_specs = modfinder.find_spec(seqmodname)
-
+        if (seqmod_specs is None):
+            raise ImportError
         if (isinstance(seqmod_specs.loader,zipimport.zipimporter)):
             seqmodule = seqmod_specs.loader.load_module('python.mri_python.'+seqmodname)
         else :
