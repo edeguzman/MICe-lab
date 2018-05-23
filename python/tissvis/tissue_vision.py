@@ -8,12 +8,11 @@ from typing import Dict, List
 import pandas as pd
 
 from pydpiper.core.stages import Stages, Result
-from pydpiper.core.arguments import CompoundParser, AnnotatedParser, lsq6_parser
+from pydpiper.core.arguments import CompoundParser, AnnotatedParser
 from pydpiper.execution.application import mk_application
 from pydpiper.core.files import FileAtom
 from pydpiper.minc.files import MincAtom
 from pydpiper.minc.registration import autocrop
-from pydpiper.pipelines.MBM import mbm, MBMConf, mk_mbm_parser
 
 from tissvis.arguments import TV_stitch_parser, cellprofiler_parser, stacks_to_volume_parser, autocrop_parser
 from tissvis.reconstruction import TV_stitch_wrap, cellprofiler_wrap, stacks_to_volume
