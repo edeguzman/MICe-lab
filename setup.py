@@ -21,6 +21,7 @@ setup(name="MICe-lab",
                'python/convert_CT_image.py',
                'python/Snakefile',
                'python/crop_to_brain.py',
+               'python/calculate_determinant_of_linear_xfm_file.py'
                'python/mri_python/mri_recon.py',
                'python/mri_python/fse3dmice_recon.py',
                ],
