@@ -9,10 +9,12 @@ import pandas as pd
 
 from pydpiper.core.stages import Stages, Result
 from pydpiper.core.arguments import CompoundParser, AnnotatedParser
+from pydpiper.core.util import maybe_deref_path
 from pydpiper.execution.application import mk_application
 from pydpiper.core.files import FileAtom
 from pydpiper.minc.files import MincAtom
-from pydpiper.minc.registration import autocrop
+from pydpiper.minc.registration import autocrop, check_MINC_input_files
+from pydpiper.pipelines.MBM import mbm, MBMConf, common_space
 
 from tissvis.arguments import TV_stitch_parser, cellprofiler_parser, stacks_to_volume_parser, autocrop_parser
 from tissvis.reconstruction import TV_stitch_wrap, cellprofiler_wrap, stacks_to_volume
@@ -22,11 +24,13 @@ class Brain(object):
     def __init__(self,
                  brain_directory: FileAtom,
                  name: str,
-                 slice_stitched: FileAtom = None,
+                 Zstart: int,
+                 Zend: int,
                  ) -> None:
         self.brain_directory = brain_directory
         self.name = name
-        self.slice_stitched = slice_stitched
+        self.z_start = Zstart
+        self.z_end = Zend
 
 
 def get_brains(options):
@@ -35,8 +39,9 @@ def get_brains(options):
 
     csv = pd.read_csv(options.csv_file)
 
-    brains = [Brain(FileAtom(brain_directory), brain_name)
-              for brain_directory, brain_name in zip(csv.brain_directory, csv.brain_name)]
+    brains = [Brain(FileAtom(brain_directory), brain_name, Zstart, Zend)
+              for brain_directory, brain_name, Zstart, Zend
+              in zip(csv.brain_directory, csv.brain_name, int(csv.Zstart), int(csv.Zend))]
     return brains
 
 
@@ -70,7 +75,11 @@ def tissue_vision_pipeline(options):
 
         stitched = []
         brain.x, brain.y, brain.z, brain.z_resolution = get_params(os.path.join(brain.brain_directory.path, brain.name))
-        for z in range (1, brain.z+1):
+
+        if pd.isna(brain.z_start): brain.z_start = 1
+        if pd.isna(brain.z_end): brain.z_end = brain.z
+
+        for z in range (brain.z_start, brain.z_end + 1):
             brain.slice_stitched = FileAtom(os.path.join(slice_directory, brain.name + "_Z%04d.tif" % z))
             stitched.append(brain.slice_stitched)
 
@@ -96,7 +105,7 @@ def tissue_vision_pipeline(options):
         smooths = []
         binaries = []
 
-        for z in range(1, brain.z + 1):
+        for z in range(brain.z_start, brain.z_end+1):
             brain.slice_overLay = FileAtom(
                 os.path.join(brain.cp_directory, brain.name + "_Z%04d_overLay.tiff" % z))
             brain.slice_smooth = FileAtom(
@@ -202,24 +211,32 @@ def tissue_vision_pipeline(options):
         all_binary_pad_results.append(binary_pad_results)
 
 #############################
-# Step 6: Run MBM.py with the binaries as "label" files.
+# Step 6: Run MBM.py
 #############################
-    # lsq6_dir = os.path.join(output_dir, pipeline_name + "_lsq6")
-    #
-    # #TODO give the user a notice of this?
-    # options.tissue_vision.lsq6.replace(nuc = False)
-    # options.tissue_vision.lsq6.replace(inormalize = False)
-    #
-    # targets = registration_targets(lsq6_conf=options.tissue_vision.lsq6,
-    #                                app_conf=options.application,
-    #                                first_input_file=all_smooth_pad_results[0])
-    #
-    # lsq6_result = s.defer(lsq6_nuc_inorm(imgs=all_smooth_pad_results,
-    #                                      resolution=options.tissue_vision.stacks_to_volume.plane_resolution,
-    #                                      #TODO IS THIS RIGHT?
-    #                                      registration_targets=targets,
-    #                                      lsq6_dir=lsq6_dir,
-    #                                      lsq6_options=options.lsq6))
+
+    check_MINC_input_files([img.path for img in all_smooth_pad_results])
+    # TODO how does MBMConf get passed to mbm_pipeline()?
+    mbm_result = s.defer(mbm(imgs=all_smooth_pad_results, options=options,
+                             prefix=pipeline_name, output_dir=output_dir))
+
+    if options.mbm.common_space.do_common_space_registration:
+        s.defer(common_space(mbm_result, options))
+
+    # create useful CSVs (note the files listed therein won't yet exist ...):
+    #TODO why is this so tediously the same as mbm_pipeline()
+    (mbm_result.xfms.assign(native_file=lambda df: df.rigid_xfm.apply(lambda x: x.source),
+                            lsq6_file=lambda df: df.lsq12_nlin_xfm.apply(lambda x: x.source),
+                            lsq6_mask_file=lambda df:
+                              df.lsq12_nlin_xfm.apply(lambda x: x.source.mask if x.source.mask else ""),
+                            nlin_file=lambda df: df.lsq12_nlin_xfm.apply(lambda x: x.resampled),
+                            common_space_file=lambda df: df.xfm_to_common.apply(lambda x: x.resampled)
+                                                if options.mbm.common_space.do_common_space_registration else None)
+     .applymap(maybe_deref_path)
+     .drop(["common_space_file"] if not options.mbm.common_space.do_common_space_registration else [], axis=1)
+     .to_csv("transforms.csv", index=False))
+
+    (mbm_result.determinants.drop(["full_det", "nlin_det"], axis=1)
+     .applymap(maybe_deref_path).to_csv("determinants.csv", index=False))
 
     return Result(stages=s, output=Namespace(TV_stitch_output=all_TV_stitch_results,
                                              cellprofiler_output=all_cellprofiler_results
