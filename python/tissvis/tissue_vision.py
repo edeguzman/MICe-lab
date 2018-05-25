@@ -14,7 +14,7 @@ from pydpiper.execution.application import mk_application
 from pydpiper.core.files import FileAtom
 from pydpiper.minc.files import MincAtom
 from pydpiper.minc.registration import autocrop, check_MINC_input_files
-from pydpiper.pipelines.MBM import mbm, MBMConf, common_space
+from pydpiper.pipelines.MBM import mbm, MBMConf, common_space, mk_mbm_parser
 
 from tissvis.arguments import TV_stitch_parser, cellprofiler_parser, stacks_to_volume_parser, autocrop_parser
 from tissvis.reconstruction import TV_stitch_wrap, cellprofiler_wrap, stacks_to_volume
@@ -41,7 +41,7 @@ def get_brains(options):
 
     brains = [Brain(FileAtom(brain_directory), brain_name, Zstart, Zend)
               for brain_directory, brain_name, Zstart, Zend
-              in zip(csv.brain_directory, csv.brain_name, int(csv.Zstart), int(csv.Zend))]
+              in zip(csv.brain_directory, csv.brain_name, csv.Zstart, csv.Zend)]
     return brains
 
 
@@ -76,8 +76,14 @@ def tissue_vision_pipeline(options):
         stitched = []
         brain.x, brain.y, brain.z, brain.z_resolution = get_params(os.path.join(brain.brain_directory.path, brain.name))
 
-        if pd.isna(brain.z_start): brain.z_start = 1
-        if pd.isna(brain.z_end): brain.z_end = brain.z
+        if pd.isna(brain.z_start):
+            brain.z_start = 1
+        else:
+            brain.z_start = int(brain.z_start)
+        if pd.isna(brain.z_end):
+            brain.z_end = brain.z
+        else:
+            brain.z_end = int(brain.z_end)
 
         for z in range (brain.z_start, brain.z_end + 1):
             brain.slice_stitched = FileAtom(os.path.join(slice_directory, brain.name + "_Z%04d.tif" % z))
@@ -122,7 +128,7 @@ def tissue_vision_pipeline(options):
                                                               overLays = overLays,
                                                               smooths = smooths,
                                                               binaries = binaries,
-                                                              Zend = brain.z,
+                                                              Zend = brain.z_end,
                                                               output_dir = output_dir,
                                                               env_vars = env_vars
                                                              ))
@@ -214,29 +220,29 @@ def tissue_vision_pipeline(options):
 # Step 6: Run MBM.py
 #############################
 
-    check_MINC_input_files([img.path for img in all_smooth_pad_results])
-    # TODO how does MBMConf get passed to mbm_pipeline()?
-    mbm_result = s.defer(mbm(imgs=all_smooth_pad_results, options=options,
-                             prefix=pipeline_name, output_dir=output_dir))
-
-    if options.mbm.common_space.do_common_space_registration:
-        s.defer(common_space(mbm_result, options))
-
-    # create useful CSVs (note the files listed therein won't yet exist ...):
-    #TODO why is this so tediously the same as mbm_pipeline()
-    (mbm_result.xfms.assign(native_file=lambda df: df.rigid_xfm.apply(lambda x: x.source),
-                            lsq6_file=lambda df: df.lsq12_nlin_xfm.apply(lambda x: x.source),
-                            lsq6_mask_file=lambda df:
-                              df.lsq12_nlin_xfm.apply(lambda x: x.source.mask if x.source.mask else ""),
-                            nlin_file=lambda df: df.lsq12_nlin_xfm.apply(lambda x: x.resampled),
-                            common_space_file=lambda df: df.xfm_to_common.apply(lambda x: x.resampled)
-                                                if options.mbm.common_space.do_common_space_registration else None)
-     .applymap(maybe_deref_path)
-     .drop(["common_space_file"] if not options.mbm.common_space.do_common_space_registration else [], axis=1)
-     .to_csv("transforms.csv", index=False))
-
-    (mbm_result.determinants.drop(["full_det", "nlin_det"], axis=1)
-     .applymap(maybe_deref_path).to_csv("determinants.csv", index=False))
+    # check_MINC_input_files([img.path for img in all_smooth_pad_results])
+    # # TODO how does MBMConf get passed to mbm_pipeline()?
+    # mbm_result = s.defer(mbm(imgs=all_smooth_pad_results, options=options,
+    #                          prefix=pipeline_name, output_dir=output_dir))
+    #
+    # if options.mbm.common_space.do_common_space_registration:
+    #     s.defer(common_space(mbm_result, options))
+    #
+    # # create useful CSVs (note the files listed therein won't yet exist ...):
+    # #TODO why is this so tediously the same as mbm_pipeline()
+    # (mbm_result.xfms.assign(native_file=lambda df: df.rigid_xfm.apply(lambda x: x.source),
+    #                         lsq6_file=lambda df: df.lsq12_nlin_xfm.apply(lambda x: x.source),
+    #                         lsq6_mask_file=lambda df:
+    #                           df.lsq12_nlin_xfm.apply(lambda x: x.source.mask if x.source.mask else ""),
+    #                         nlin_file=lambda df: df.lsq12_nlin_xfm.apply(lambda x: x.resampled),
+    #                         common_space_file=lambda df: df.xfm_to_common.apply(lambda x: x.resampled)
+    #                                             if options.mbm.common_space.do_common_space_registration else None)
+    #  .applymap(maybe_deref_path)
+    #  .drop(["common_space_file"] if not options.mbm.common_space.do_common_space_registration else [], axis=1)
+    #  .to_csv("transforms.csv", index=False))
+    #
+    # (mbm_result.determinants.drop(["full_det", "nlin_det"], axis=1)
+    #  .applymap(maybe_deref_path).to_csv("determinants.csv", index=False))
 
     return Result(stages=s, output=Namespace(TV_stitch_output=all_TV_stitch_results,
                                              cellprofiler_output=all_cellprofiler_results
@@ -245,7 +251,7 @@ def tissue_vision_pipeline(options):
 #############################
 # Combine Parser & Make Application
 #############################
-
+import pdb; pdb.set_trace()
 tissue_vision_parser = CompoundParser([TV_stitch_parser, cellprofiler_parser, stacks_to_volume_parser, autocrop_parser])
 
 tissue_vision_application = mk_application(

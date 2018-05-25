@@ -52,7 +52,7 @@ CellprofilerMemCfg = NamedTuple("CellprofilerMemCfg",
                             [('base_mem', float),
                              ('mem_per_size', float)])
 
-default_cellprofiler_mem_cfg = CellprofilerMemCfg(base_mem=3.5e-6, mem_per_size=3e-7)
+default_cellprofiler_mem_cfg = CellprofilerMemCfg(base_mem=1e-5, mem_per_size=1e-7)
 
 def cellprofiler_wrap(stitched: List[FileAtom],
                        cellprofiler_pipeline: FileAtom,
@@ -74,11 +74,11 @@ def cellprofiler_wrap(stitched: List[FileAtom],
                      env_vars = env_vars)
     s.add(stage)
 
-    def set_memory(stage: CmdStage, mem_cfg: NamedTuple, img_size):
+    def set_memory(stage: CmdStage, mem_cfg: NamedTuple, z):
+        img_size = os.stat(stitched[z - 1].path).st_size
         stage.setMem(mem_cfg.base_mem + img_size * mem_cfg.mem_per_size)
 
     for z in range (1, Zend + 1):
-
         stage = CmdStage(inputs=(batch_data,), outputs=(overLays[z-1], smooths[z-1], binaries[z-1]),
                          cmd=['cellprofiler', '-c', '-r',
                               '-p %s' % batch_data.path,
@@ -87,10 +87,10 @@ def cellprofiler_wrap(stitched: List[FileAtom],
                          log_file=os.path.join(output_dir, "cellprofiler.log"),
                          env_vars=env_vars)
 
-        img_size = os.stat(stitched[z-1].path).st_size
-        #img_size=img_size is evaluated at this point, to avoid the problem of how python handles evironment.
-        stage.when_runnable_hooks.append(lambda s, img_size=img_size:
-                                         set_memory(s, default_cellprofiler_mem_cfg, img_size))
+
+        #z=z is evaluated at this point, to avoid the problem of how python handles evironment.
+        stage.when_runnable_hooks.append(lambda s, z=z:
+                                         set_memory(s, default_cellprofiler_mem_cfg, z))
 
         s.add(stage)
     return Result(stages=s, output=(overLays, smooths, binaries))
