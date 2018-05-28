@@ -15,6 +15,7 @@ from pydpiper.core.files import FileAtom
 from pydpiper.minc.files import MincAtom
 from pydpiper.minc.registration import autocrop, check_MINC_input_files
 from pydpiper.pipelines.MBM import mbm, MBMConf, common_space, mk_mbm_parser
+from pydpiper.minc.ANTS import ANTS
 
 from tissvis.arguments import TV_stitch_parser, cellprofiler_parser, stacks_to_volume_parser, autocrop_parser
 from tissvis.reconstruction import TV_stitch_wrap, cellprofiler_wrap, stacks_to_volume
@@ -97,7 +98,7 @@ def tissue_vision_pipeline(options):
                                                 output_dir = output_dir
                                                 ))
         all_TV_stitch_results.append(TV_stitch_result)
-
+#TODO write a when_finished_hook to tell the user that this finished.
 #############################
 # Step 2: Run cellprofiler
 #############################
@@ -137,7 +138,7 @@ def tissue_vision_pipeline(options):
 #############################
 # Step 3: Run stacks_to_volume.py
 #############################
-        smooth_volume = MincAtom(os.path.join(output_dir, pipeline_name + "_" + anatomical + "_stacked",
+        smooth_volume = MincAtom(os.path.join(output_dir, pipeline_name + "_stacked",
                                               brain.name + "_" + anatomical + "_stacked.mnc"))
         smooth_slices_to_volume_results = s.defer(stacks_to_volume(
             slices = smooths,
@@ -150,7 +151,7 @@ def tissue_vision_pipeline(options):
         all_smooth_volume_results.append(smooth_slices_to_volume_results)
 
 
-        binary_volume = MincAtom(os.path.join(output_dir, pipeline_name + "_" + binary + "_stacked",
+        binary_volume = MincAtom(os.path.join(output_dir, pipeline_name + "_stacked",
                                                 brain.name + "_" + binary + "_stacked.mnc"))
         binary_slices_to_volume_results = s.defer(stacks_to_volume(
             slices = binaries,
@@ -163,9 +164,13 @@ def tissue_vision_pipeline(options):
         all_binary_volume_results.append(binary_slices_to_volume_results)
 
 #############################
+        #ants = ANTS.ANTS()
+
+
+#############################
 # Step 4: Run autocrop to resample to isotropic
 #############################
-        smooth_volume_isotropic = MincAtom(os.path.join(output_dir, pipeline_name + "_" + anatomical + "_stacked_isotropic",
+        smooth_volume_isotropic = MincAtom(os.path.join(output_dir, pipeline_name + "_stacked",
                                                         brain.name + "_" + anatomical + "_stacked_isotropic.mnc"))
         smooth_volume_isotropic_results = s.defer(autocrop(
             isostep = options.tissue_vision.stacks_to_volume.plane_resolution,
@@ -175,7 +180,7 @@ def tissue_vision_pipeline(options):
         ))
         all_smooth_volume_isotropic_results.append(smooth_volume_isotropic_results)
 
-        binary_volume_isotropic = MincAtom(os.path.join(output_dir, pipeline_name + "_" + binary + "_stacked_isotropic",
+        binary_volume_isotropic = MincAtom(os.path.join(output_dir, pipeline_name + "_stacked",
                                                  brain.name + "_" + binary + "_stacked_isotropic.mnc"))
         binary_volume_isotropic_results = s.defer(autocrop(
             isostep = options.tissue_vision.stacks_to_volume.plane_resolution,
@@ -192,7 +197,7 @@ def tissue_vision_pipeline(options):
         y_pad = options.tissue_vision.autocrop.y_pad
         z_pad = options.tissue_vision.autocrop.z_pad
 
-        smooth_padded = MincAtom(os.path.join(output_dir, pipeline_name + "_" + anatomical + "_padded",
+        smooth_padded = MincAtom(os.path.join(output_dir, pipeline_name + "_stacked",
                                                         brain.name + "_" + anatomical + "_padded.mnc"))
         smooth_pad_results = s.defer(autocrop(
             img = smooth_volume_isotropic,
@@ -204,7 +209,7 @@ def tissue_vision_pipeline(options):
         ))
         all_smooth_pad_results.append(smooth_pad_results)
 
-        binary_padded = MincAtom(os.path.join(output_dir, pipeline_name + "_" + binary + "_padded",
+        binary_padded = MincAtom(os.path.join(output_dir, pipeline_name + "_stacked",
                                                         brain.name + "_" + binary + "_padded.mnc"))
         binary_pad_results = s.defer(autocrop(
             img = binary_volume_isotropic,
@@ -220,29 +225,29 @@ def tissue_vision_pipeline(options):
 # Step 6: Run MBM.py
 #############################
 
-    # check_MINC_input_files([img.path for img in all_smooth_pad_results])
-    # # TODO how does MBMConf get passed to mbm_pipeline()?
-    # mbm_result = s.defer(mbm(imgs=all_smooth_pad_results, options=options,
-    #                          prefix=pipeline_name, output_dir=output_dir))
-    #
-    # if options.mbm.common_space.do_common_space_registration:
-    #     s.defer(common_space(mbm_result, options))
-    #
-    # # create useful CSVs (note the files listed therein won't yet exist ...):
-    # #TODO why is this so tediously the same as mbm_pipeline()
-    # (mbm_result.xfms.assign(native_file=lambda df: df.rigid_xfm.apply(lambda x: x.source),
-    #                         lsq6_file=lambda df: df.lsq12_nlin_xfm.apply(lambda x: x.source),
-    #                         lsq6_mask_file=lambda df:
-    #                           df.lsq12_nlin_xfm.apply(lambda x: x.source.mask if x.source.mask else ""),
-    #                         nlin_file=lambda df: df.lsq12_nlin_xfm.apply(lambda x: x.resampled),
-    #                         common_space_file=lambda df: df.xfm_to_common.apply(lambda x: x.resampled)
-    #                                             if options.mbm.common_space.do_common_space_registration else None)
-    #  .applymap(maybe_deref_path)
-    #  .drop(["common_space_file"] if not options.mbm.common_space.do_common_space_registration else [], axis=1)
-    #  .to_csv("transforms.csv", index=False))
-    #
-    # (mbm_result.determinants.drop(["full_det", "nlin_det"], axis=1)
-    #  .applymap(maybe_deref_path).to_csv("determinants.csv", index=False))
+    check_MINC_input_files([img.path for img in all_smooth_pad_results])
+
+    mbm_result = s.defer(mbm(imgs=all_smooth_pad_results, options=options,
+                             prefix=pipeline_name, output_dir=output_dir))
+
+    if options.mbm.common_space.do_common_space_registration:
+        s.defer(common_space(mbm_result, options))
+
+    # create useful CSVs (note the files listed therein won't yet exist ...):
+    #TODO why is this so tediously the same as mbm_pipeline()
+    (mbm_result.xfms.assign(native_file=lambda df: df.rigid_xfm.apply(lambda x: x.source),
+                            lsq6_file=lambda df: df.lsq12_nlin_xfm.apply(lambda x: x.source),
+                            lsq6_mask_file=lambda df:
+                              df.lsq12_nlin_xfm.apply(lambda x: x.source.mask if x.source.mask else ""),
+                            nlin_file=lambda df: df.lsq12_nlin_xfm.apply(lambda x: x.resampled),
+                            common_space_file=lambda df: df.xfm_to_common.apply(lambda x: x.resampled)
+                                                if options.mbm.common_space.do_common_space_registration else None)
+     .applymap(maybe_deref_path)
+     .drop(["common_space_file"] if not options.mbm.common_space.do_common_space_registration else [], axis=1)
+     .to_csv("transforms.csv", index=False))
+
+    (mbm_result.determinants.drop(["full_det", "nlin_det"], axis=1)
+     .applymap(maybe_deref_path).to_csv("determinants.csv", index=False))
 
     return Result(stages=s, output=Namespace(TV_stitch_output=all_TV_stitch_results,
                                              cellprofiler_output=all_cellprofiler_results
@@ -251,8 +256,9 @@ def tissue_vision_pipeline(options):
 #############################
 # Combine Parser & Make Application
 #############################
-import pdb; pdb.set_trace()
-tissue_vision_parser = CompoundParser([TV_stitch_parser, cellprofiler_parser, stacks_to_volume_parser, autocrop_parser])
+
+tissue_vision_parser = CompoundParser([TV_stitch_parser, cellprofiler_parser, stacks_to_volume_parser,
+                                       autocrop_parser, AnnotatedParser(parser=mk_mbm_parser(), namespace='mbm')])
 
 tissue_vision_application = mk_application(
     parsers=[AnnotatedParser(parser=tissue_vision_parser, namespace='tissue_vision')],
