@@ -15,7 +15,6 @@ from pydpiper.core.files import FileAtom
 from pydpiper.minc.files import MincAtom
 from pydpiper.minc.registration import autocrop, check_MINC_input_files
 from pydpiper.pipelines.MBM import mbm, MBMConf, common_space, mk_mbm_parser
-from pydpiper.minc.ANTS import ANTS
 
 from tissvis.arguments import TV_stitch_parser, cellprofiler_parser, stacks_to_volume_parser, autocrop_parser
 from tissvis.reconstruction import TV_stitch_wrap, cellprofiler_wrap, stacks_to_volume
@@ -129,6 +128,7 @@ def tissue_vision_pipeline(options):
                                                               overLays = overLays,
                                                               smooths = smooths,
                                                               binaries = binaries,
+                                                              Zstart = brain.z_start,
                                                               Zend = brain.z_end,
                                                               output_dir = output_dir,
                                                               env_vars = env_vars
@@ -164,7 +164,6 @@ def tissue_vision_pipeline(options):
         all_binary_volume_results.append(binary_slices_to_volume_results)
 
 #############################
-        #ants = ANTS.ANTS()
 
 
 #############################
@@ -224,7 +223,7 @@ def tissue_vision_pipeline(options):
 #############################
 # Step 6: Run MBM.py
 #############################
-
+#TODO turn off inormalize and nuc from the parser...somehow
     check_MINC_input_files([img.path for img in all_smooth_pad_results])
 
     mbm_result = s.defer(mbm(imgs=all_smooth_pad_results, options=options,
@@ -257,11 +256,11 @@ def tissue_vision_pipeline(options):
 # Combine Parser & Make Application
 #############################
 
-tissue_vision_parser = CompoundParser([TV_stitch_parser, cellprofiler_parser, stacks_to_volume_parser,
-                                       autocrop_parser, AnnotatedParser(parser=mk_mbm_parser(), namespace='mbm')])
+tissue_vision_parser = AnnotatedParser(CompoundParser([TV_stitch_parser, cellprofiler_parser, stacks_to_volume_parser,
+                                       autocrop_parser]), namespace='tissue_vision')
 
 tissue_vision_application = mk_application(
-    parsers=[AnnotatedParser(parser=tissue_vision_parser, namespace='tissue_vision')],
+    parsers=[AnnotatedParser(parser=mk_mbm_parser(), namespace='mbm'), tissue_vision_parser],
     pipeline=tissue_vision_pipeline)
 
 #############################

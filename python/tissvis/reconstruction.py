@@ -60,6 +60,7 @@ def cellprofiler_wrap(stitched: List[FileAtom],
                        overLays: List[FileAtom],
                        smooths: List[FileAtom],
                        binaries: List[FileAtom],
+                       Zstart: int,
                        Zend: int,
                        output_dir: str,
                        env_vars: Dict[str, str]):
@@ -78,8 +79,8 @@ def cellprofiler_wrap(stitched: List[FileAtom],
         img_size = os.stat(stitched[z - 1].path).st_size
         stage.setMem(mem_cfg.base_mem + img_size * mem_cfg.mem_per_size)
 
-    for z in range (1, Zend + 1):
-        stage = CmdStage(inputs=(batch_data,), outputs=(overLays[z-1], smooths[z-1], binaries[z-1]),
+    for z in range (Zstart, Zend + 1):
+        stage = CmdStage(inputs=(batch_data,), outputs=(overLays[z-Zstart], smooths[z-Zstart], binaries[z-Zstart]),
                          cmd=['cellprofiler', '-c', '-r',
                               '-p %s' % batch_data.path,
                               '-f %s' % z,
