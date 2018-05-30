@@ -223,30 +223,30 @@ def tissue_vision_pipeline(options):
 #############################
 # Step 6: Run MBM.py
 #############################
-#TODO turn off inormalize and nuc from the parser...somehow
-    check_MINC_input_files([img.path for img in all_smooth_pad_results])
-
-    mbm_result = s.defer(mbm(imgs=all_smooth_pad_results, options=options,
-                             prefix=pipeline_name, output_dir=output_dir))
-
-    if options.mbm.common_space.do_common_space_registration:
-        s.defer(common_space(mbm_result, options))
-
-    # create useful CSVs (note the files listed therein won't yet exist ...):
-    #TODO why is this so tediously the same as mbm_pipeline()
-    (mbm_result.xfms.assign(native_file=lambda df: df.rigid_xfm.apply(lambda x: x.source),
-                            lsq6_file=lambda df: df.lsq12_nlin_xfm.apply(lambda x: x.source),
-                            lsq6_mask_file=lambda df:
-                              df.lsq12_nlin_xfm.apply(lambda x: x.source.mask if x.source.mask else ""),
-                            nlin_file=lambda df: df.lsq12_nlin_xfm.apply(lambda x: x.resampled),
-                            common_space_file=lambda df: df.xfm_to_common.apply(lambda x: x.resampled)
-                                                if options.mbm.common_space.do_common_space_registration else None)
-     .applymap(maybe_deref_path)
-     .drop(["common_space_file"] if not options.mbm.common_space.do_common_space_registration else [], axis=1)
-     .to_csv("transforms.csv", index=False))
-
-    (mbm_result.determinants.drop(["full_det", "nlin_det"], axis=1)
-     .applymap(maybe_deref_path).to_csv("determinants.csv", index=False))
+    # #TODO turn off inormalize and nuc from the parser...somehow
+    # check_MINC_input_files([img.path for img in all_smooth_pad_results])
+    #
+    # mbm_result = s.defer(mbm(imgs=all_smooth_pad_results, options=options,
+    #                          prefix=pipeline_name, output_dir=output_dir))
+    #
+    # if options.mbm.common_space.do_common_space_registration:
+    #     s.defer(common_space(mbm_result, options))
+    #
+    # # create useful CSVs (note the files listed therein won't yet exist ...):
+    # #TODO why is this so tediously the same as mbm_pipeline()
+    # (mbm_result.xfms.assign(native_file=lambda df: df.rigid_xfm.apply(lambda x: x.source),
+    #                         lsq6_file=lambda df: df.lsq12_nlin_xfm.apply(lambda x: x.source),
+    #                         lsq6_mask_file=lambda df:
+    #                           df.lsq12_nlin_xfm.apply(lambda x: x.source.mask if x.source.mask else ""),
+    #                         nlin_file=lambda df: df.lsq12_nlin_xfm.apply(lambda x: x.resampled),
+    #                         common_space_file=lambda df: df.xfm_to_common.apply(lambda x: x.resampled)
+    #                                             if options.mbm.common_space.do_common_space_registration else None)
+    #  .applymap(maybe_deref_path)
+    #  .drop(["common_space_file"] if not options.mbm.common_space.do_common_space_registration else [], axis=1)
+    #  .to_csv("transforms.csv", index=False))
+    #
+    # (mbm_result.determinants.drop(["full_det", "nlin_det"], axis=1)
+    #  .applymap(maybe_deref_path).to_csv("determinants.csv", index=False))
 
     return Result(stages=s, output=Namespace(TV_stitch_output=all_TV_stitch_results,
                                              cellprofiler_output=all_cellprofiler_results
@@ -255,12 +255,17 @@ def tissue_vision_pipeline(options):
 #############################
 # Combine Parser & Make Application
 #############################
+def mk_tissue_vision_parser():
+    return CompoundParser([TV_stitch_parser,
+              cellprofiler_parser,
+              stacks_to_volume_parser,
+              autocrop_parser])
 
-tissue_vision_parser = AnnotatedParser(CompoundParser([TV_stitch_parser, cellprofiler_parser, stacks_to_volume_parser,
-                                       autocrop_parser]), namespace='tissue_vision')
+#tissue_vision_parser = AnnotatedParser(CompoundParser([TV_stitch_parser, cellprofiler_parser, stacks_to_volume_parser,
+                                       # autocrop_parser]), namespace='tissue_vision')
 
 tissue_vision_application = mk_application(
-    parsers=[AnnotatedParser(parser=mk_mbm_parser(), namespace='mbm'), tissue_vision_parser],
+    parsers=[AnnotatedParser(parser=mk_tissue_vision_parser(), namespace='tissue_vision')],
     pipeline=tissue_vision_pipeline)
 
 #############################
