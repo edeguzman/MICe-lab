@@ -8,6 +8,47 @@ from pydpiper.minc.files import MincAtom
 from pyminc.volumes.factory import volumeFromFile
 from pydpiper.core.util import NamedTuple
 
+#refer to the link below for changing these parameters:
+#https://github.com/ANTsX/ANTs/wiki/Anatomy-of-an-antsRegistration-call
+def antsRegistration(img: FileAtom,
+                     target: FileAtom,
+                     transform: FileAtom,
+                     output_dir: str,
+                     dimensionality: int = 2):
+
+    stage = CmdStage(inputs=(img, target), outputs=(transform),
+                     cmd = ['antsRegistration', '--verbose 1', '--float 0',
+                            '--dimensionality %s' % dimensionality,
+                            '--output [%s,%s,%s]' % (transform.replace('GenericAffine.mat', ''), warped, inversewarped),
+                            '--interpolation Linear',
+                            '--use-histogram-matching 0',
+                            #'--winsorize-image-intensities [0.005,0.995]',
+                            '--initial-moving-transform [%s,%s,1]' % (img, target), #1 indicates center of mass
+                            '--transform Rigid[0.1]',
+                            '--metric MI[%s,%s,1,32,Regular,0.25]' % (img, target),
+                            '--convergence [1000x500x250x0,1e-6,10]',
+                            '--shrink-factors 12x8x4x2',
+                            '--smoothing-sigmas 4x3x2x1vox'],
+                     )
+
+    return Result(stages=Stages([stage]), output=(transform, ))
+
+def antsApplyTransforms(img: FileAtom,
+                        transform: FileAtom,
+                        transformed: FileAtom,
+                        output_dir: str,
+                        dimensionality: int = 2):
+
+    stage = CmdStage(inputs=(), outputs=(),
+                     cmd = ['antsApplyTransform', '--verbose',
+                            '--dimensionality %s' % dimensionality,
+                            '--input %s' % img,
+                            '--reference-image %s' % img,
+                            '--output %s' % transformed,
+                            '--transform %s' % transform,
+                            ])
+
+    return Result(stages=Stages([stage]), output=(transformed,))
 
 def TV_stitch_wrap(brain_directory: FileAtom,
                    brain_name: str,
@@ -53,7 +94,7 @@ CellprofilerMemCfg = NamedTuple("CellprofilerMemCfg",
                             [('base_mem', float),
                              ('mem_per_size', float)])
 
-default_cellprofiler_mem_cfg = CellprofilerMemCfg(base_mem=1e-5, mem_per_size=1e-7)
+default_cellprofiler_mem_cfg = CellprofilerMemCfg(base_mem=14, mem_per_size=2e-7)
 
 def cellprofiler_wrap(stitched: List[FileAtom],
                        cellprofiler_pipeline: FileAtom,
@@ -75,9 +116,8 @@ def cellprofiler_wrap(stitched: List[FileAtom],
                      log_file = os.path.join(output_dir,"cellprofiler.log"),
                      env_vars = env_vars)
     s.add(stage)
-
     def set_memory(stage: CmdStage, mem_cfg: NamedTuple, z):
-        img_size = os.stat(stitched[z - 1].path).st_size
+        img_size = os.stat(stitched[0].path).st_size
         stage.setMem(mem_cfg.base_mem + img_size * mem_cfg.mem_per_size)
 
     for z in range (Zstart, Zend + 1):

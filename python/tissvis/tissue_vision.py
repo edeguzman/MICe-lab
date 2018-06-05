@@ -17,7 +17,7 @@ from pydpiper.minc.registration import autocrop, check_MINC_input_files
 from pydpiper.pipelines.MBM import mbm, MBMConf, common_space, mk_mbm_parser
 
 from tissvis.arguments import TV_stitch_parser, cellprofiler_parser, stacks_to_volume_parser, autocrop_parser
-from tissvis.reconstruction import TV_stitch_wrap, cellprofiler_wrap, stacks_to_volume
+from tissvis.reconstruction import TV_stitch_wrap, cellprofiler_wrap, stacks_to_volume, antsRegistration
 from tissvis.TV_stitch import get_params
 
 class Brain(object):
@@ -77,6 +77,7 @@ def tissue_vision_pipeline(options):
         stitched = []
         brain.x, brain.y, brain.z, brain.z_resolution = get_params(os.path.join(brain.brain_directory.path, brain.name))
 
+        #accounting for errors in tile acquisition
         brain.z_start = 1 if pd.isna(brain.z_start) else int(brain.z_start)
         brain.z_end = brain.z if pd.isna(brain.z_end) else int(brain.z_end)
         brain.z_section = None if pd.isna(brain.z_section) else int(brain.z_section)
@@ -116,6 +117,15 @@ def tissue_vision_pipeline(options):
                                                       output_dir=output_dir
                                                       ))
             all_TV_stitch_results.append(TV_stitch_result)
+
+            #############################
+            # Step 1b: Fix brains that were imaged in sections
+            #############################
+
+            s.defer(antsRegistration())
+
+
+
 #TODO write a when_finished_hook to tell the user that this finished.
 #############################
 # Step 2: Run cellprofiler
@@ -233,10 +243,6 @@ def tissue_vision_pipeline(options):
                 output_dir=output_dir
             ))
             all_binary_volume_results.append(binary_slices_to_volume_results)
-
-            #############################
-            # Step 3b: Combine the sections
-            #############################
 
 
 #############################

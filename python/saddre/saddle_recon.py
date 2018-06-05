@@ -20,7 +20,7 @@ from pydpiper.core.arguments import lsq6_parser, CompoundParser, AnnotatedParser
 from pydpiper.core.stages import Stages, Result
 from pydpiper.execution.application import mk_application
 from pydpiper.minc.files import MincAtom
-from pydpiper.minc.registration import get_resolution_from_file, registration_targets, lsq6_nuc_inorm
+from pydpiper.minc.registration import get_resolution_from_file, lsq6_nuc_inorm
 from pydpiper.minc.registration import RegistrationTargets
 
 from saddre.reconstruction import varian_recon_ge3dmice_saddle, dist_corr_saddle, crop_to_brain
