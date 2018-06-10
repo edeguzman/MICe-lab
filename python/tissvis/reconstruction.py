@@ -4,51 +4,12 @@ from typing import Dict, List
 
 from pydpiper.core.stages import Stages, Result, CmdStage
 from pydpiper.core.files import FileAtom
-from pydpiper.minc.files import MincAtom
-from pyminc.volumes.factory import volumeFromFile
+from pydpiper.minc.files import MincAtom, XfmAtom
 from pydpiper.core.util import NamedTuple
 
-#refer to the link below for changing these parameters:
-#https://github.com/ANTsX/ANTs/wiki/Anatomy-of-an-antsRegistration-call
-def antsRegistration(img: FileAtom,
-                     target: FileAtom,
-                     transform: FileAtom,
-                     output_dir: str,
-                     dimensionality: int = 2):
+import pyminc.volumes.factory as pyminc
 
-    stage = CmdStage(inputs=(img, target), outputs=(transform),
-                     cmd = ['antsRegistration', '--verbose 1', '--float 0',
-                            '--dimensionality %s' % dimensionality,
-                            '--output [%s,%s,%s]' % (transform.replace('GenericAffine.mat', ''), warped, inversewarped),
-                            '--interpolation Linear',
-                            '--use-histogram-matching 0',
-                            #'--winsorize-image-intensities [0.005,0.995]',
-                            '--initial-moving-transform [%s,%s,1]' % (img, target), #1 indicates center of mass
-                            '--transform Rigid[0.1]',
-                            '--metric MI[%s,%s,1,32,Regular,0.25]' % (img, target),
-                            '--convergence [1000x500x250x0,1e-6,10]',
-                            '--shrink-factors 12x8x4x2',
-                            '--smoothing-sigmas 4x3x2x1vox'],
-                     )
-
-    return Result(stages=Stages([stage]), output=(transform, ))
-
-def antsApplyTransforms(img: FileAtom,
-                        transform: FileAtom,
-                        transformed: FileAtom,
-                        output_dir: str,
-                        dimensionality: int = 2):
-
-    stage = CmdStage(inputs=(), outputs=(),
-                     cmd = ['antsApplyTransform', '--verbose',
-                            '--dimensionality %s' % dimensionality,
-                            '--input %s' % img,
-                            '--reference-image %s' % img,
-                            '--output %s' % transformed,
-                            '--transform %s' % transform,
-                            ])
-
-    return Result(stages=Stages([stage]), output=(transformed,))
+import numpy as np
 
 def TV_stitch_wrap(brain_directory: FileAtom,
                    brain_name: str,
@@ -154,3 +115,141 @@ def stacks_to_volume( slices: List[FileAtom],
                      log_file=os.path.join(output_dir, "stacks_to_volume.log"))
 
     return Result(stages=Stages([stage]), output=(volume))
+
+#refer to the link below for changing these parameters:
+#https://github.com/ANTsX/ANTs/wiki/Anatomy-of-an-antsRegistration-call
+def antsRegistration(img: MincAtom,
+                     target: MincAtom,
+                     transform: XfmAtom,
+                     output_dir: str,
+                     warped: str = "Warped.nii.gz",
+                     inversewarped: str = "InverseWarped.nii.gz",
+                     dimensionality: int = 3):
+
+    stage = CmdStage(inputs=(img, target), outputs=(transform,),
+                     cmd = ['antsRegistration', '--verbose 1', '--float 0', '--minc',
+                            '--dimensionality %s' % dimensionality,
+                            '--output [%s,%s,%s]' % (transform.path.replace('0_GenericAffine.xfm', ''), warped, inversewarped),
+                            '--interpolation Linear',
+                            '--use-histogram-matching 0',
+                            #'--winsorize-image-intensities [0.005,0.995]',
+                            '--initial-moving-transform [%s,%s,1]' % (img.path, target.path), #1 indicates center of mass
+                            '--transform Translation[0.1]',
+                            '--metric MI[%s,%s,1,32,Regular,0.25]' % (img.path, target.path),
+                            '--convergence [1000x500x250x0,1e-6,10]',
+                            '--shrink-factors 12x8x4x2',
+                            '--smoothing-sigmas 4x3x2x1vox'],
+                     log_file=os.path.join(output_dir, "join_sections.log")
+                     )
+
+    return Result(stages=Stages([stage]), output=(transform))
+
+def antsApplyTransforms(img: FileAtom,
+                        transform: XfmAtom,
+                        transformed: FileAtom,
+                        output_dir: str,
+                        dimensionality: int = 2):
+
+    stage = CmdStage(inputs=(), outputs=(),
+                     cmd = ['antsApplyTransform', '--verbose',
+                            '--dimensionality %s' % dimensionality,
+                            '--input %s' % img,
+                            '--reference-image %s' % img,
+                            '--output %s' % transformed,
+                            '--transform %s' % transform,
+                            ],
+                     log_file=os.path.join(output_dir, "join_sections.log"))
+    return Result(stages=Stages([stage]), output=(transformed,))
+
+def tif_to_minc(tif: FileAtom,
+              volume: MincAtom,
+              z_resolution: float,
+              stacks_to_volume_options,
+              output_dir: str,
+              uniform_sum: bool = False):
+    stage = CmdStage(inputs=(tif,), outputs=(volume,),
+                     cmd=['stacks_to_volume.py',
+                          '--input-resolution %s' % stacks_to_volume_options.input_resolution,
+                          '--output-resolution %s' % stacks_to_volume_options.plane_resolution,
+                          '--slice-gap %s' % z_resolution,
+                          '--uniform-sum' if uniform_sum else '',
+                          '%s' % tif.path,
+                          '%s' % volume.path],
+                     log_file=os.path.join(output_dir, "join_sections.log"))
+    return Result(stages=Stages([stage]), output=(volume))
+
+def get_like(img: MincAtom,
+             ref: MincAtom,
+             like: MincAtom,
+             output_dir: str):
+
+    stage = CmdStage(inputs=(img,), outputs=(like,),
+                     cmd=['mincreshape', '-clobber',
+                          '-start {start}',
+                          '-count {count}',
+                          img.path,
+                          like.path],
+                     log_file=os.path.join(output_dir, "join_sections.log"))
+
+    def set_params(stage: CmdStage):
+        img_pyminc = pyminc.volumeFromFile(img.path)
+        ref_pyminc = pyminc.volumeFromFile(ref.path)
+        count = np.maximum(ref_pyminc.data.count, img_pyminc.data.count)
+        sum = ref_pyminc.data.count[0] + img_pyminc.data.count[0]
+        for index, arg in enumerate(stage.cmd):
+            stage.cmd[index] = arg.format(start = '0,0,0,', count = '%s,%s,%s' % (sum,count[1],count[2]))
+
+    stage.when_runnable_hooks.append(lambda stage: set_params(stage))
+
+    return Result(stages=Stages([stage]), output=(like))
+
+def get_through_plane_xfm(img: MincAtom,
+                          xfm: XfmAtom,
+                          output_dir: str):
+    stage = CmdStage(inputs=(img,), outputs=(xfm,),
+                     cmd=['param2xfm', '-translation', '0', '{y}', '0',
+                          xfm.path],
+                     log_file=os.path.join(output_dir, "join_sections.log"))
+
+    def set_params(stage:CmdStage):
+        img_pyminc = pyminc.volumeFromFile(img.path)
+        count = img_pyminc.data.count
+        separations = img_pyminc.data.separations
+        for index, arg in enumerate(stage.cmd):
+            stage.cmd[index] = arg.format(y = count[0] * separations[0])
+
+    stage.when_runnable_hooks.append(lambda stage: set_params(stage))
+
+    return Result(stages=Stages([stage]), output=(xfm))
+
+def concat_xfm(xfms: List[XfmAtom],
+               outxfm: XfmAtom,
+               output_dir: str):
+    stage = CmdStage(inputs=tuple(xfms), outputs = (outxfm,),
+                     cmd=['xfmconcat',
+                          ' '.join(xfm.path for xfm in xfms.__iter__()),
+                          outxfm.path],
+                     log_file=os.path.join(output_dir, "join_sections.log"))
+    return Result(stages=Stages([stage]), output=(outxfm))
+
+def mincresample(img: MincAtom,
+                 xfm: XfmAtom,
+                 like: MincAtom,
+                 resampled: MincAtom,
+                 output_dir: str):
+    stage = CmdStage(inputs=(xfm, like, img), outputs=(resampled,),
+                     cmd=['mincresample', '-clobber',
+                          '-transform %s' % xfm.path,
+                          '-like %s' % like.path, img.path, resampled.path],
+                     log_file = os.path.join(output_dir, "join_sections.log"))
+    return Result(stages=Stages([stage]), output=resampled)
+
+def mincmath(imgs: List[MincAtom],
+             result: MincAtom,
+             output_dir: str):
+    stage = CmdStage(inputs=tuple(imgs), outputs=(result,),
+                     cmd=['mincmath', '-add',
+                          ' '.join(img.path for img in imgs.__iter__()),
+                          result.path],
+                     log_file=os.path.join(output_dir, "join_sections.log"))
+    return Result(stages=Stages([stage]), output=result)
