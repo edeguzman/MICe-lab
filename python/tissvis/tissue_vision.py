@@ -306,7 +306,7 @@ def tissue_vision_pipeline(options):
             s.defer(mincmath(imgs=[binary_volume_1_like, binary_volume_2_transformed],
                              result=binary_volume,
                              output_dir=output_dir))
-#TODO get the binary volume!
+
 #############################
 # Step 4: Run autocrop to resample to isotropic
 #############################
