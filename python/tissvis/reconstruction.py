@@ -207,7 +207,7 @@ def get_through_plane_xfm(img: MincAtom,
                           xfm: XfmAtom,
                           output_dir: str):
     stage = CmdStage(inputs=(img,), outputs=(xfm,),
-                     cmd=['param2xfm', '-translation', '0', '{y}', '0',
+                     cmd=['param2xfm', '-clobber', '-translation', '0', '{y}', '0',
                           xfm.path],
                      log_file=os.path.join(output_dir, "join_sections.log"))
 
@@ -226,7 +226,7 @@ def concat_xfm(xfms: List[XfmAtom],
                outxfm: XfmAtom,
                output_dir: str):
     stage = CmdStage(inputs=tuple(xfms), outputs = (outxfm,),
-                     cmd=['xfmconcat',
+                     cmd=['xfmconcat', '-clobber',
                           ' '.join(xfm.path for xfm in xfms.__iter__()),
                           outxfm.path],
                      log_file=os.path.join(output_dir, "join_sections.log"))
@@ -248,7 +248,7 @@ def mincmath(imgs: List[MincAtom],
              result: MincAtom,
              output_dir: str):
     stage = CmdStage(inputs=tuple(imgs), outputs=(result,),
-                     cmd=['mincmath', '-add',
+                     cmd=['mincmath', '-clobber', '-add',
                           ' '.join(img.path for img in imgs.__iter__()),
                           result.path],
                      log_file=os.path.join(output_dir, "join_sections.log"))

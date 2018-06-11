@@ -262,9 +262,9 @@ def tissue_vision_pipeline(options):
             #create through-plane transform
             through_plane_xfm = FileAtom(os.path.join(output_dir, pipeline_name + "_stacked",
                                                   brain.name + "_through_plane.xfm"))
-            s.defer(get_through_plane_xfm(img = source_minc,
-                                      xfm = through_plane_xfm,
-                                      output_dir = output_dir))
+            s.defer(get_through_plane_xfm(img = smooth_volume_1,
+                                          xfm = through_plane_xfm,
+                                          output_dir = output_dir))
 
             #concatenate the transforms
             xfm_concat = FileAtom(os.path.join(output_dir, pipeline_name + "_stacked",
