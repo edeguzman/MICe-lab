@@ -150,7 +150,7 @@ def antsApplyTransforms(img: FileAtom,
                         output_dir: str,
                         dimensionality: int = 2):
 
-    stage = CmdStage(inputs=(), outputs=(),
+    stage = CmdStage(inputs=(img, transform), outputs=(transformed,),
                      cmd = ['antsApplyTransform', '--verbose',
                             '--dimensionality %s' % dimensionality,
                             '--input %s' % img,
@@ -183,7 +183,7 @@ def get_like(img: MincAtom,
              like: MincAtom,
              output_dir: str):
 
-    stage = CmdStage(inputs=(img,), outputs=(like,),
+    stage = CmdStage(inputs=(img,ref), outputs=(like,),
                      cmd=['mincreshape', '-clobber',
                           '-start {start}',
                           '-count {count}',
