@@ -23,8 +23,8 @@ from pydpiper.minc.files import MincAtom
 from pydpiper.minc.registration import get_resolution_from_file, lsq6_nuc_inorm
 from pydpiper.minc.registration import RegistrationTargets
 
-from saddre.reconstruction import varian_recon_ge3dmice_saddle, dist_corr_saddle, crop_to_brain
-from saddre.arguments      import varian_recon_parser, crop_to_brain_parser
+from saddle_reconstruction.reconstruction import varian_recon_ge3dmice_saddle, dist_corr_saddle, crop_to_brain
+from saddle_reconstruction.arguments      import varian_recon_parser, crop_to_brain_parser
 
 def saddle_recon_pipeline(options):
 

@@ -19,7 +19,7 @@ import glob
 import operator
 
 #TODO why is this even needed? it breaks importing from TV_stitch
-#from tissvis.Zstack_icorr import *
+#from tissue_vision.Zstack_icorr import *
 
 from scipy.stats import t
 

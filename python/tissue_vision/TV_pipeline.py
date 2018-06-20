@@ -16,10 +16,10 @@ from pydpiper.minc.files import MincAtom
 from pydpiper.minc.registration import autocrop, check_MINC_input_files
 from pydpiper.pipelines.MBM import mbm, MBMConf, common_space, mk_mbm_parser
 
-from tissvis.arguments import TV_stitch_parser, cellprofiler_parser, stacks_to_volume_parser, autocrop_parser
-from tissvis.reconstruction import TV_stitch_wrap, cellprofiler_wrap, stacks_to_volume, \
+from tissue_vision.arguments import TV_stitch_parser, cellprofiler_parser, stacks_to_volume_parser, autocrop_parser
+from tissue_vision.reconstruction import TV_stitch_wrap, cellprofiler_wrap, stacks_to_volume, \
     antsRegistration, get_like, tif_to_minc, get_through_plane_xfm, concat_xfm, mincresample, mincmath
-from tissvis.TV_stitch import get_params
+from tissue_vision.TV_stitch import get_params
 
 class Brain(object):
     def __init__(self,

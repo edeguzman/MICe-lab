@@ -125,7 +125,7 @@ def antsRegistration(img: MincAtom,
                      warped: str = "Warped.nii.gz",
                      inversewarped: str = "InverseWarped.nii.gz",
                      dimensionality: int = 3):
-
+#TODO warped and inversewarped output to the working directory
     stage = CmdStage(inputs=(img, target), outputs=(transform,),
                      cmd = ['antsRegistration', '--verbose 1', '--float 0', '--minc',
                             '--dimensionality %s' % dimensionality,

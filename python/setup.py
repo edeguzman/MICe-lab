@@ -22,14 +22,14 @@ setup(name="MICe-lab",
       dependency_links=['https://github.com/opencv/opencv/archive/3.1.0.tar.gz',
 	'https://github.com/Mouse-Imaging-Centre/pydpiper'],
       packages=find_packages(),
-      scripts=['saddre/saddle_recon.py',
+      scripts=['saddle_reconstruction/saddle_reconstruct.py',
                'convert_CT_image.py',
                'Snakefile',
                'crop_to_brain.py',
                'mri_python/mri_recon.py',
                'mri_python/fse3dmice_recon.py',
-               'tissvis/tissue_vision.py',
-               'tissvis/TV_stitch.py',
-               'tissvis/stacks_to_volume.py'
+               'tissue_vision/TV_pipeline.py',
+               'tissue_vision/TV_stitch.py',
+               'tissue_vision/stacks_to_volume.py'
                ],
       )
