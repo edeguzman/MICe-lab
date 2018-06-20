@@ -17,7 +17,8 @@ setup(name="MICe-lab",
         'scipy',
         'snakemake',
         'matplotlib',
-        'Pillow'
+        'Pillow',
+        'cellprofiler'
       ],
       dependency_links=['https://github.com/opencv/opencv/archive/3.1.0.tar.gz',
 	'https://github.com/Mouse-Imaging-Centre/pydpiper'],
