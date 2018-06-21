@@ -20,12 +20,14 @@ def TV_stitch_wrap(brain_directory: FileAtom,
                    output_dir: str):
 
     stage = CmdStage(inputs=(brain_directory,), outputs=tuple(stitched),
-                     cmd=['TV_stitch.py', '--clobber', '--keeptmp',
+                     cmd=['TV_stitch.py', '--clobber',
                           '--verbose',
                           '--Zstart %s' % Zstart,
                           '--Zend %s' % Zend,
-                          '--save_positions_file %s_positions.txt' % brain_name
+                          '--save_positions_file %s_positions.txt' %
+                          os.path.join(stitched[0].dir, brain_name + '_Zstart' + str(Zstart))
                           if TV_stitch_options.save_positions_file else "",
+                          '--keeptmp' if TV_stitch_options.keep_tmp else "",
                           '--scaleoutput %s' % TV_stitch_options.scale_output if TV_stitch_options.scale_output else '',
                           '--skip_tile_match' if TV_stitch_options.skip_tile_match else '',
                           # '--Ystart %s' % TV_stitch_options.Ystart if TV_stitch_options.Ystart else '',

@@ -46,6 +46,9 @@ def _mk_TV_stitch_parser():
     p.add_argument("--no-gradient-image", dest="no_gradient_image",
                    action="store_true", default=False,
                    help="Do not use gradient and raw image combined for correlation")
+    p.add_argument("--keep-stitch-tmp", dest="keep_tmp",
+                   action="store_true", default=False,
+                   help="Keep temporary files from TV_stitch.")
     p.add_argument("--save-positions-file", dest="save_positions_file",
                    action="store_true", default=False,
                    help="Save the final positions to file (for subsequent use with --use-positions-file)")
