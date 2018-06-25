@@ -101,7 +101,7 @@ def tissue_vision_pipeline(options):
         if brain.z_section:
             TV_stitch_result = s.defer(TV_stitch_wrap(brain_directory=brain.brain_directory,
                                                       brain_name=brain.name,
-                                                      stitched=stitched[brain.z_start:brain.z_section],
+                                                      stitched=stitched[brain.z_start:brain.z_section - 1],
                                                       TV_stitch_options=options.tissue_vision.TV_stitch,
                                                       Zstart=brain.z_start,
                                                       Zend=brain.z_section - 1,

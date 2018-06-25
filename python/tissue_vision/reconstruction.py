@@ -21,7 +21,7 @@ def TV_stitch_wrap(brain_directory: FileAtom,
 
     stage = CmdStage(inputs=(brain_directory,), outputs=tuple(stitched),
                      cmd=['TV_stitch.py', '--clobber',
-                          '--verbose',
+                          #'--verbose',
                           '--Zstart %s' % Zstart,
                           '--Zend %s' % Zend,
                           '--save_positions_file %s_positions.txt' %
