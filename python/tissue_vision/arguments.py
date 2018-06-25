@@ -114,10 +114,14 @@ def _mk_cellprofiler_parser():
                    type=int,
                    default=None,
                    help="The one-based index of the last image set to process")
-    p.add_argument("--python2-path", dest="python2_path",
+    p.add_argument("--cellprofiler-python-path", dest="python_path",
                    type=str,
                    default=None,
                    help="Set your PYTHONPATH environment variable for cellprofiler using this flag.")
+    p.add_argument("--cellprofiler-path", dest="path",
+                   type=str,
+                   default=None,
+                   help="Set your PATH environment variable for cellprofiler using this flag.")
     p.add_argument("--java-home", dest="java_home",
                    type=str,
                    default=None,

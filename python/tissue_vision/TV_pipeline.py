@@ -56,7 +56,8 @@ def tissue_vision_pipeline(options):
     brains = get_brains(options.application) # List(Brain,...)
 
     env_vars = {}
-    env_vars['PYTHONPATH'] = options.tissue_vision.cellprofiler.python2_path
+    env_vars['PATH'] = options.tissue_vision.cellprofiler.path
+    env_vars['PYTHONPATH'] = options.tissue_vision.cellprofiler.python_path
     cppline = FileAtom(options.tissue_vision.cellprofiler.cellprofiler_pipeline)
 
     # Hold results obtained in the loop
