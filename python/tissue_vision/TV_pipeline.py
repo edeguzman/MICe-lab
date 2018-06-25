@@ -100,7 +100,6 @@ def tissue_vision_pipeline(options):
             all_TV_stitch_results.append(TV_stitch_result)
 
         if brain.z_section:
-            import pdb; pdb.set_trace()
             TV_stitch_result = s.defer(TV_stitch_wrap(brain_directory=brain.brain_directory,
                                                       brain_name=brain.name,
                                                       stitched=stitched[0 : brain.z_section - brain.z_start],
