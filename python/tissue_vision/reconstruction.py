@@ -18,7 +18,7 @@ def TV_stitch_wrap(brain_directory: FileAtom,
                    Zstart: int,
                    Zend: int,
                    output_dir: str):
-
+#TODO inputs should be tiles not just brain_directory
     stage = CmdStage(inputs=(brain_directory,), outputs=tuple(stitched),
                      cmd=['TV_stitch.py', '--clobber',
                           #'--verbose',
@@ -82,9 +82,9 @@ def cellprofiler_wrap(stitched: List[FileAtom],
     def set_memory(stage: CmdStage, mem_cfg: NamedTuple, z):
         img_size = os.stat(stitched[0].path).st_size
         stage.setMem(mem_cfg.base_mem + img_size * mem_cfg.mem_per_size)
-
-    for z in range (Zstart, Zend + 1):
-        stage = CmdStage(inputs=(batch_data,), outputs=(overLays[z-Zstart], smooths[z-Zstart], binaries[z-Zstart]),
+    #cellprofiler's indexing starts at 1. so if Zstart=5, z=1 gives the 5th slice!
+    for z in range (1, Zend + 2 - Zstart):
+        stage = CmdStage(inputs=(batch_data,), outputs=(overLays[z-1], smooths[z-1], binaries[z-1]),
                          cmd=['cellprofiler', '-c', '-r',
                               '-p %s' % batch_data.path,
                               '-f %s' % z,
@@ -120,24 +120,24 @@ def stacks_to_volume( slices: List[FileAtom],
 
 #refer to the link below for changing these parameters:
 #https://github.com/ANTsX/ANTs/wiki/Anatomy-of-an-antsRegistration-call
-def antsRegistration(img: MincAtom,
-                     target: MincAtom,
+def antsRegistration(fixed: MincAtom,
+                     moving: MincAtom,
                      transform: XfmAtom,
                      output_dir: str,
                      warped: str = "Warped.nii.gz",
                      inversewarped: str = "InverseWarped.nii.gz",
                      dimensionality: int = 3):
 #TODO warped and inversewarped output to the working directory
-    stage = CmdStage(inputs=(img, target), outputs=(transform,),
+    stage = CmdStage(inputs=(fixed, moving), outputs=(transform,),
                      cmd = ['antsRegistration', '--verbose 1', '--float 0', '--minc',
                             '--dimensionality %s' % dimensionality,
                             '--output [%s,%s,%s]' % (transform.path.replace('0_GenericAffine.xfm', ''), warped, inversewarped),
                             '--interpolation Linear',
                             '--use-histogram-matching 0',
-                            #'--winsorize-image-intensities [0.005,0.995]',
-                            '--initial-moving-transform [%s,%s,1]' % (img.path, target.path), #1 indicates center of mass
+                            '--winsorize-image-intensities [0.01,0.99]',
+                            '--initial-moving-transform [%s,%s,1]' % (fixed.path, moving.path), #1 indicates center of mass
                             '--transform Translation[0.1]',
-                            '--metric MI[%s,%s,1,32,Regular,0.25]' % (img.path, target.path),
+                            '--metric MI[%s,%s,1,32,Regular,0.25]' % (fixed.path, moving.path),
                             '--convergence [1000x500x250x0,1e-6,10]',
                             '--shrink-factors 12x8x4x2',
                             '--smoothing-sigmas 4x3x2x1vox'],

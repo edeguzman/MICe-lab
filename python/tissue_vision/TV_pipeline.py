@@ -192,7 +192,7 @@ def tissue_vision_pipeline(options):
             smooth_volume_1 = MincAtom(os.path.join(output_dir, pipeline_name + "_stacked",
                                                   brain.name + "_" + anatomical + "_stacked_1.mnc"))
             smooth_slices_to_volume_results = s.defer(stacks_to_volume(
-                slices=smooths[brain.z_start-1:brain.z_section-1],
+                slices=smooths[0 : brain.z_section - brain.z_start],
                 volume=smooth_volume_1,
                 stacks_to_volume_options=options.tissue_vision.stacks_to_volume,
                 uniform_sum=False,
@@ -204,7 +204,7 @@ def tissue_vision_pipeline(options):
             smooth_volume_2 = MincAtom(os.path.join(output_dir, pipeline_name + "_stacked",
                                                   brain.name + "_" + anatomical + "_stacked_2.mnc"))
             smooth_slices_to_volume_results = s.defer(stacks_to_volume(
-                slices=smooths[brain.z_section-1:brain.z_end],
+                slices=smooths[brain.z_section - brain.z_start:brain.z_end-1],
                 volume=smooth_volume_2,
                 stacks_to_volume_options=options.tissue_vision.stacks_to_volume,
                 uniform_sum=False,
@@ -217,7 +217,7 @@ def tissue_vision_pipeline(options):
             binary_volume_1 = MincAtom(os.path.join(output_dir, pipeline_name + "_stacked",
                                                   brain.name + "_" + binary + "_stacked_1.mnc"))
             binary_slices_to_volume_results = s.defer(stacks_to_volume(
-                slices=binaries[brain.z_start-1:brain.z_section-1],
+                slices=binaries[0 : brain.z_section - brain.z_start],
                 volume=binary_volume_1,
                 stacks_to_volume_options=options.tissue_vision.stacks_to_volume,
                 z_resolution=brain.z_resolution,
@@ -229,7 +229,7 @@ def tissue_vision_pipeline(options):
             binary_volume_2 = MincAtom(os.path.join(output_dir, pipeline_name + "_stacked",
                                                   brain.name + "_" + binary + "_stacked_2.mnc"))
             binary_slices_to_volume_results = s.defer(stacks_to_volume(
-                slices=binaries[brain.z_section-1:brain.z_end],
+                slices=binaries[brain.z_section - brain.z_start:brain.z_end-1],
                 volume=binary_volume_2,
                 stacks_to_volume_options=options.tissue_vision.stacks_to_volume,
                 z_resolution=brain.z_resolution,
@@ -239,15 +239,15 @@ def tissue_vision_pipeline(options):
             all_binary_volume_results.append(binary_slices_to_volume_results)
 
             #create minc slices for registration
-            target_minc = s.defer(tif_to_minc(
-                tif=smooths[brain.z_section - 2],
-                volume=MincAtom(smooths[brain.z_section - 2].path.replace("tiff","mnc")),
+            fixed_minc = s.defer(tif_to_minc(
+                tif=smooths[brain.z_section - brain.z_start - 1],
+                volume=MincAtom(smooths[brain.z_section - brain.z_start - 1].path.replace("tiff","mnc")),
                 stacks_to_volume_options=options.tissue_vision.stacks_to_volume,
                 z_resolution=brain.z_resolution,
                 output_dir=output_dir))
-            source_minc = s.defer(tif_to_minc(
-                tif=smooths[brain.z_section - 1],
-                volume=MincAtom(smooths[brain.z_section - 1].path.replace("tiff","mnc")),
+            moving_minc = s.defer(tif_to_minc(
+                tif=smooths[brain.z_section - brain.z_start],
+                volume=MincAtom(smooths[brain.z_section - brain.z_start].path.replace("tiff","mnc")),
                 stacks_to_volume_options=options.tissue_vision.stacks_to_volume,
                 z_resolution=brain.z_resolution,
                 output_dir=output_dir))
@@ -255,8 +255,8 @@ def tissue_vision_pipeline(options):
             #create in-plane transform
             in_plane_transform = FileAtom(os.path.join(output_dir, pipeline_name + "_stacked",
                                                   brain.name + "0_GenericAffine.xfm"))
-            s.defer(antsRegistration(img = source_minc,
-                                     target = target_minc,
+            s.defer(antsRegistration(fixed = fixed_minc,
+                                     moving = moving_minc,
                                      transform = in_plane_transform,
                                      output_dir=output_dir))
 
