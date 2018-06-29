@@ -15,6 +15,7 @@ Installation
 The perl and C++ code:
 <pre><code>
 ./autogen.sh
+[export $PKG_CONFIG_PATH=/hpf/tools/centos6/opencv/3.0/lib/pkgconfig/]
 ./configure [--prefix=~] [--prefix=~/.local] 
 make
 make install
