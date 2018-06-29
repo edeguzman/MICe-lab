@@ -72,7 +72,7 @@ def cellprofiler_wrap(stitched: List[FileAtom],
     s = Stages()
 
     stage = CmdStage(inputs=(stitched+[cellprofiler_pipeline]), outputs=(batch_data,),
-                     cmd=['cellprofiler', '-c', '-r',
+                     cmd=['cellprofiler.sh', '-c', '-r',
                           '-p %s' % cellprofiler_pipeline.path,
                           '-i %s' % stitched[0].dir,
                           '-o %s' % batch_data.dir],

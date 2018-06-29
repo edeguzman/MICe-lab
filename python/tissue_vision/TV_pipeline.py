@@ -55,9 +55,11 @@ def tissue_vision_pipeline(options):
 
     brains = get_brains(options.application) # List(Brain,...)
 
+    # The new solution is to just wrap cellprofiler with cellprofiler.sh and load correct modules.
     env_vars = {}
-    env_vars['PATH'] = options.tissue_vision.cellprofiler.path
-    env_vars['PYTHONPATH'] = options.tissue_vision.cellprofiler.python_path
+    # env_vars['PATH'] = options.tissue_vision.cellprofiler.path
+    # env_vars['PYTHONPATH'] = options.tissue_vision.cellprofiler.python_path
+    # env_vars['LD_LIBRARY_PATH'] = options.tissue_vision.cellprofiler.ld_library_path
     cppline = FileAtom(options.tissue_vision.cellprofiler.cellprofiler_pipeline)
 
     # Hold results obtained in the loop
