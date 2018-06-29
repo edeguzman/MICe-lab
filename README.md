@@ -15,7 +15,7 @@ Installation
 The perl and C++ code:
 <pre><code>
 ./autogen.sh
-./configure
+./configure [--prefix=~] [--prefix=~/.local] 
 make
 make install
 </pre></code>
@@ -23,7 +23,7 @@ make install
 Python scripts:
 <pre><code>
 cd python
-python3 setup.py install
+python3 setup.py install [--user]
 </pre></code>
 
 
