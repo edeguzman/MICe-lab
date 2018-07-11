@@ -85,7 +85,7 @@ def cellprofiler_wrap(stitched: List[FileAtom],
     #cellprofiler's indexing starts at 1. so if Zstart=5, z=1 gives the 5th slice!
     for z in range (1, Zend + 2 - Zstart):
         stage = CmdStage(inputs=(batch_data,), outputs=(overLays[z-1], smooths[z-1], binaries[z-1]),
-                         cmd=['cellprofiler', '-c', '-r',
+                         cmd=['cellprofiler.sh', '-c', '-r',
                               '-p %s' % batch_data.path,
                               '-f %s' % z,
                               '-l %s' % z],
