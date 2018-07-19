@@ -150,17 +150,17 @@ stacks_to_volume_parser = AnnotatedParser(parser=BaseParser(_mk_stacks_to_volume
 def _mk_autocrop_parser():
     p = ArgParser(add_help=False)
     p.add_argument("--x-pad", dest="x_pad",
-                   type=float,
+                   type=str,
                    default=0,
-                   help="Single number in mm will be added to both sides")
+                   help="Padding in mm will be added to both sides (%f,%f)")
     p.add_argument("--y-pad", dest="y_pad",
-                   type=float,
+                   type=str,
                    default=0,
-                   help="Single number in mm will be added to both sides")
+                   help="Padding in mm will be added to both sides (%f,%f)")
     p.add_argument("--z-pad", dest="z_pad",
-                   type=float,
+                   type=str,
                    default=0,
-                   help="Single number in mm will be added to both sides")
+                   help="Padding in mm will be added to both sides (%f,%f)")
     return p
 
 autocrop_parser = AnnotatedParser(parser=BaseParser(_mk_autocrop_parser(), "autocrop"),
