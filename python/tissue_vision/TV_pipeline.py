@@ -80,7 +80,8 @@ def tissue_vision_pipeline(options):
         slice_directory = os.path.join(output_dir, pipeline_name + "_stitched", brain.name)
 
         stitched = []
-        brain.x, brain.y, brain.z, brain.z_resolution = get_params(os.path.join(brain.brain_directory.path, brain.name))
+        brain.x, brain.y, brain.z, brain.z_resolution = \
+            get_params(os.path.join(brain.brain_directory.path, brain.name))
 
         #accounting for errors in tile acquisition
         brain.z_start = 1 if pd.isna(brain.z_start) else int(brain.z_start)
@@ -425,8 +426,8 @@ def mk_tissue_vision_parser():
     #                action="store_true", default=False,
     #                help="Run MBM after reconstructing the brains.")
     # p.add_subparsers()
-    tissue_vision_parser = AnnotatedParser(parser=BaseParser('tissue_vision'), namespace='tissue_vision')
-    return CompoundParser([tissue_vision_parser, TV_stitch_parser,
+    #tissue_vision_parser = AnnotatedParser(parser=BaseParser('tissue_vision'), namespace='tissue_vision')
+    return CompoundParser([TV_stitch_parser,
               cellprofiler_parser,
               stacks_to_volume_parser,
               autocrop_parser])
