@@ -151,15 +151,15 @@ def _mk_autocrop_parser():
     p = ArgParser(add_help=False)
     p.add_argument("--x-pad", dest="x_pad",
                    type=str,
-                   default=0,
+                   default='0,0',
                    help="Padding in mm will be added to both sides (%f,%f)")
     p.add_argument("--y-pad", dest="y_pad",
                    type=str,
-                   default=0,
+                   default='0,0',
                    help="Padding in mm will be added to both sides (%f,%f)")
     p.add_argument("--z-pad", dest="z_pad",
                    type=str,
-                   default=0,
+                   default='0,0',
                    help="Padding in mm will be added to both sides (%f,%f)")
     return p
 
