@@ -444,8 +444,12 @@ if __name__ == "__main__":
         p = CompoundParser([application_parser, registration_parser, execution_parser,
                            AnnotatedParser(parser=mk_tissue_vision_parser(), namespace='tissue_vision'),
                            AnnotatedParser(parser=mk_mbm_parser(with_common_space=False), namespace="mbm")])
+        # index-based reaching into the mbm-lsq6 parser to turn off
+        p.parsers[-1].parser.parsers[0].parser.argparser.set_defaults(inormalize=False)
+        p.parsers[-1].parser.parsers[0].parser.argparser.set_defaults(nuc=False)
     else:
         p = CompoundParser([application_parser, registration_parser, execution_parser,
                            AnnotatedParser(parser=mk_tissue_vision_parser(), namespace='tissue_vision')])
+
     parsed_options = parse(p, sys.argv[1:])
     execute(tissue_vision_pipeline(parsed_options).stages, parsed_options)
