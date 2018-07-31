@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 
 import os
+import sys
 
 from configargparse import Namespace, ArgParser
+from argparse import ArgumentError
 from typing import Dict, List, Union
 
 import pandas as pd
@@ -10,8 +12,9 @@ import pandas as pd
 from pydpiper.core.stages import Stages, Result
 from pydpiper.core.arguments import CompoundParser, AnnotatedParser, BaseParser
 from pydpiper.core.util import maybe_deref_path
-from pydpiper.execution.application import mk_application
+from pydpiper.execution.application import mk_application, execute
 from pydpiper.core.files import FileAtom
+from pydpiper.core.arguments import application_parser, registration_parser, execution_parser, parse
 from pydpiper.minc.files import MincAtom
 from pydpiper.minc.registration import autocrop, create_quality_control_images, check_MINC_input_files
 from pydpiper.pipelines.MBM import mbm, MBMConf, mk_mbm_parser
@@ -422,25 +425,27 @@ def tissue_vision_pipeline(options):
 #############################
 def mk_tissue_vision_parser():
     p = ArgParser(add_help=False)
-    # p.add_argument("--run-mbm", dest="run_mbm",
-    #                action="store_true", default=False,
-    #                help="Run MBM after reconstructing the brains.")
-    # p.add_subparsers()
-    #tissue_vision_parser = AnnotatedParser(parser=BaseParser('tissue_vision'), namespace='tissue_vision')
+    p.add_argument("--run-mbm", dest="run_mbm",
+                   action="store_true", default=False,
+                   help="Run MBM after reconstructing the brains. Use this flag with --help to get MBM help.")
+    mbm_parser = AnnotatedParser(parser=BaseParser(p, 'mbm'), namespace='mbm')
     return CompoundParser([TV_stitch_parser,
               cellprofiler_parser,
               stacks_to_volume_parser,
-              autocrop_parser])
-
-
-tissue_vision_application = mk_application(
-    parsers=[AnnotatedParser(parser=mk_tissue_vision_parser(), namespace='tissue_vision')],
-             # AnnotatedParser(parser=mk_mbm_parser(with_common_space=False), namespace="mbm")],
-    pipeline=tissue_vision_pipeline)
+              autocrop_parser, mbm_parser])
 
 #############################
 # Run
 #############################
 
 if __name__ == "__main__":
-    tissue_vision_application()
+    #this is needed as adding the parser without passing the flags breaks
+    if "--run-mbm" in sys.argv[1:]:
+        p = CompoundParser([application_parser, registration_parser, execution_parser,
+                           AnnotatedParser(parser=mk_tissue_vision_parser(), namespace='tissue_vision'),
+                           AnnotatedParser(parser=mk_mbm_parser(with_common_space=False), namespace="mbm")])
+    else:
+        p = CompoundParser([application_parser, registration_parser, execution_parser,
+                           AnnotatedParser(parser=mk_tissue_vision_parser(), namespace='tissue_vision')])
+    parsed_options = parse(p, sys.argv[1:])
+    execute(tissue_vision_pipeline(parsed_options).stages, parsed_options)
