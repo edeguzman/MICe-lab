@@ -359,8 +359,7 @@ def tissue_vision_pipeline(options):
         z_pad = options.tissue_vision.autocrop.z_pad
 
         smooth_padded = MincAtom(os.path.join(output_dir, pipeline_name + "_stacked",
-                                              brain.name + "_" + anatomical + "_padded.mnc"),
-                                 output_sub_dir=os.path.join(output_dir, pipeline_name + "_stacked"))
+                                              brain.name + "_" + anatomical + "_padded.mnc"))
         smooth_pad_results = s.defer(autocrop(
             img = smooth_volume_isotropic,
             autocropped = smooth_padded,
@@ -372,8 +371,7 @@ def tissue_vision_pipeline(options):
         reconstructed_mincs.append(smooth_pad_results)
 
         binary_padded = MincAtom(os.path.join(output_dir, pipeline_name + "_stacked",
-                                                        brain.name + "_" + binary + "_padded.mnc"),
-                                 output_sub_dir=os.path.join(output_dir, pipeline_name + "_stacked"))
+                                                        brain.name + "_" + binary + "_padded.mnc"))
         binary_pad_results = s.defer(autocrop(
             img = binary_volume_isotropic,
             autocropped = binary_padded,
@@ -384,55 +382,63 @@ def tissue_vision_pipeline(options):
         all_binary_pad_results.append(binary_pad_results)
         reconstructed_mincs.append(binary_pad_results)
 
-    s.defer(create_quality_control_images(imgs=reconstructed_mincs, montage_dir = output_dir,
-        montage_output=os.path.join(output_dir, pipeline_name + "_stacked", "reconstructed_montage"),
-                                          message="reconstructed_mincs"))
+    #TODO overlay them
+    # s.defer(create_quality_control_images(imgs=reconstructed_mincs, montage_dir = output_dir,
+    #     montage_output=os.path.join(output_dir, pipeline_name + "_stacked", "reconstructed_montage"),
+    #                                       message="reconstructed_mincs"))
 
-    # s.defer(create_quality_control_images(imgs=[avgs_and_xfms.avg_img]
-    #                                            + [xfm.resampled for xfm in avgs_and_xfms.output],
-    #                                       montage_output=os.path.join(lsq12_dir, "LSQ12_montage"),
-    #                                       message="lsq12"))
+    s.defer(create_quality_control_images(imgs=all_smooth_pad_results, montage_dir=output_dir,
+                                          montage_output=os.path.join(output_dir, pipeline_name + "_stacked",
+                                                                      "%s_montage" % anatomical),
+                                          message="%s_mincs" % anatomical))
+    #TODO binary images are too dim
+    # s.defer(create_quality_control_images(imgs=all_binary_pad_results, montage_dir=output_dir,
+    #                                       montage_output=os.path.join(output_dir, pipeline_name + "_stacked",
+    #                                                                   "%s_montage" % binary),
+    #                                       message="%s_mincs" % binary))
+
 #############################
 # Step 6: Run MBM.py
 #############################
-    # # TODO turn off inormalize and nuc from the parser...somehow
-    # imgs = all_smooth_pad_results
-    #
-    # check_MINC_input_files([img.path for img in imgs])
-    #
-    # mbm_result = s.defer(mbm(imgs=imgs, options=options,
-    #                          prefix=options.application.pipeline_name,
-    #                          output_dir=output_dir))
-    #
-    # # create useful CSVs (note the files listed therein won't yet exist ...):
-    # transforms = mbm_result.xfms.assign(native_file=lambda df: df.rigid_xfm.apply(lambda x: x.source),
-    #                         lsq6_file=lambda df: df.lsq12_nlin_xfm.apply(lambda x: x.source),
-    #                         lsq6_mask_file=lambda df:
-    #                           df.lsq12_nlin_xfm.apply(lambda x: x.source.mask if x.source.mask else ""),
-    #                         nlin_file=lambda df: df.lsq12_nlin_xfm.apply(lambda x: x.resampled),
-    #                         nlin_mask_file=lambda df:
-    #                           df.lsq12_nlin_xfm.apply(lambda x: x.resampled.mask if x.resampled.mask else ""))\
-    #     .applymap(maybe_deref_path)
-    # transforms.to_csv("transforms.csv", index=False)
-    #
-    # determinants = mbm_result.determinants.drop(["full_det", "nlin_det"], axis=1)\
-    #     .applymap(maybe_deref_path)
-    # determinants.to_csv("determinants.csv", index=False)
-    #
-    # analysis = transforms.merge(determinants, left_on="lsq12_nlin_xfm", right_on="inv_xfm", how='inner')\
-    #     .drop(["xfm", "inv_xfm"], axis=1)
-    # if options.mbm.segmentation.run_maget:
-    #     maget_df = pd.DataFrame(data={'label_file': [result.labels.path for result in mbm_result.maget_result],
-    #                                   'native_file': [result.orig_path for result in mbm_result.maget_result]})
-    #     analysis = analysis.merge(maget_df, on="native_file")
-    #
-    # if options.application.files:
-    #     analysis.to_csv("analysis.csv", index=False)
-    # if options.application.csv_file:
-    #     csv_file = pd.read_csv(options.application.csv_file)
-    #     csv_file["file"] = transforms.native_file
-    #     csv_file.merge(analysis, left_on="file", right_on="native_file").drop(["native_file"], axis=1)\
-    #         .to_csv("analysis.csv",index=False)
+    #this is annoying but consistent with parser logic
+    if "--run-mbm" in sys.argv[1:]:
+        imgs = all_smooth_pad_results
+
+        check_MINC_input_files([img.path for img in imgs])
+
+        mbm_result = s.defer(mbm(imgs=imgs, options=options,
+                                 prefix=options.application.pipeline_name,
+                                 output_dir=output_dir))
+
+        # create useful CSVs (note the files listed therein won't yet exist ...):
+        transforms = mbm_result.xfms.assign(native_file=lambda df: df.rigid_xfm.apply(lambda x: x.source),
+                                lsq6_file=lambda df: df.lsq12_nlin_xfm.apply(lambda x: x.source),
+                                lsq6_mask_file=lambda df:
+                                  df.lsq12_nlin_xfm.apply(lambda x: x.source.mask if x.source.mask else ""),
+                                nlin_file=lambda df: df.lsq12_nlin_xfm.apply(lambda x: x.resampled),
+                                nlin_mask_file=lambda df:
+                                  df.lsq12_nlin_xfm.apply(lambda x: x.resampled.mask if x.resampled.mask else ""))\
+            .applymap(maybe_deref_path)
+        transforms.to_csv("transforms.csv", index=False)
+
+        determinants = mbm_result.determinants.drop(["full_det", "nlin_det"], axis=1)\
+            .applymap(maybe_deref_path)
+        determinants.to_csv("determinants.csv", index=False)
+
+        analysis = transforms.merge(determinants, left_on="lsq12_nlin_xfm", right_on="inv_xfm", how='inner')\
+            .drop(["xfm", "inv_xfm"], axis=1)
+        if options.mbm.segmentation.run_maget:
+            maget_df = pd.DataFrame(data={'label_file': [result.labels.path for result in mbm_result.maget_result],
+                                          'native_file': [result.orig_path for result in mbm_result.maget_result]})
+            analysis = analysis.merge(maget_df, on="native_file")
+
+        if options.application.files:
+            analysis.to_csv("analysis.csv", index=False)
+        if options.application.csv_file:
+            csv_file = pd.read_csv(options.application.csv_file)
+            csv_file["file"] = transforms.native_file
+            csv_file.merge(analysis, left_on="file", right_on="native_file").drop(["native_file"], axis=1)\
+                .to_csv("analysis.csv",index=False)
     return Result(stages=s, output=())
 
 #############################
@@ -459,9 +465,11 @@ if __name__ == "__main__":
         p = CompoundParser([application_parser, registration_parser, execution_parser,
                            AnnotatedParser(parser=mk_tissue_vision_parser(), namespace='tissue_vision'),
                            AnnotatedParser(parser=mk_mbm_parser(with_common_space=False), namespace="mbm")])
+
         # index-based reaching into the mbm-lsq6 parser to turn off
         p.parsers[-1].parser.parsers[0].parser.argparser.set_defaults(inormalize=False)
         p.parsers[-1].parser.parsers[0].parser.argparser.set_defaults(nuc=False)
+
     else:
         p = CompoundParser([application_parser, registration_parser, execution_parser,
                            AnnotatedParser(parser=mk_tissue_vision_parser(), namespace='tissue_vision')])
