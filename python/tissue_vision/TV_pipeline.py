@@ -169,9 +169,11 @@ def tissue_vision_pipeline(options):
 # Step 3: Run stacks_to_volume.py
 #############################
         smooth_volume = MincAtom(os.path.join(output_dir, pipeline_name + "_stacked",
-                                                  brain.name + "_" + anatomical + "_stacked.mnc"))
+                                                  brain.name + "_" + anatomical + "_stacked.mnc"),
+                                 output_sub_dir=os.path.join(output_dir, pipeline_name + "_stacked"))
         binary_volume = MincAtom(os.path.join(output_dir, pipeline_name + "_stacked",
-                                      brain.name + "_" + binary + "_stacked.mnc"))
+                                      brain.name + "_" + binary + "_stacked.mnc"),
+                                 output_sub_dir=os.path.join(output_dir, pipeline_name + "_stacked"))
 
         if not brain.z_section:
             smooth_slices_to_volume_results = s.defer(stacks_to_volume(
@@ -197,7 +199,8 @@ def tissue_vision_pipeline(options):
         if brain.z_section:
 
             smooth_volume_1 = MincAtom(os.path.join(output_dir, pipeline_name + "_stacked",
-                                                  brain.name + "_" + anatomical + "_stacked_1.mnc"))
+                                                  brain.name + "_" + anatomical + "_stacked_1.mnc"),
+                                 output_sub_dir=os.path.join(output_dir, pipeline_name + "_stacked"))
             smooth_slices_to_volume_results = s.defer(stacks_to_volume(
                 slices=smooths[0 : brain.z_section - brain.z_start],
                 volume=smooth_volume_1,
@@ -209,7 +212,8 @@ def tissue_vision_pipeline(options):
             all_smooth_volume_results.append(smooth_slices_to_volume_results)
 
             smooth_volume_2 = MincAtom(os.path.join(output_dir, pipeline_name + "_stacked",
-                                                  brain.name + "_" + anatomical + "_stacked_2.mnc"))
+                                                  brain.name + "_" + anatomical + "_stacked_2.mnc"),
+                                 output_sub_dir=os.path.join(output_dir, pipeline_name + "_stacked"))
             smooth_slices_to_volume_results = s.defer(stacks_to_volume(
                 slices=smooths[brain.z_section - brain.z_start:brain.z_end-1],
                 volume=smooth_volume_2,
@@ -222,7 +226,8 @@ def tissue_vision_pipeline(options):
 
 
             binary_volume_1 = MincAtom(os.path.join(output_dir, pipeline_name + "_stacked",
-                                                  brain.name + "_" + binary + "_stacked_1.mnc"))
+                                                  brain.name + "_" + binary + "_stacked_1.mnc"),
+                                 output_sub_dir=os.path.join(output_dir, pipeline_name + "_stacked"))
             binary_slices_to_volume_results = s.defer(stacks_to_volume(
                 slices=binaries[0 : brain.z_section - brain.z_start],
                 volume=binary_volume_1,
@@ -234,7 +239,8 @@ def tissue_vision_pipeline(options):
             all_binary_volume_results.append(binary_slices_to_volume_results)
 
             binary_volume_2 = MincAtom(os.path.join(output_dir, pipeline_name + "_stacked",
-                                                  brain.name + "_" + binary + "_stacked_2.mnc"))
+                                                  brain.name + "_" + binary + "_stacked_2.mnc"),
+                                 output_sub_dir=os.path.join(output_dir, pipeline_name + "_stacked"))
             binary_slices_to_volume_results = s.defer(stacks_to_volume(
                 slices=binaries[brain.z_section - brain.z_start:brain.z_end-1],
                 volume=binary_volume_2,
@@ -248,13 +254,15 @@ def tissue_vision_pipeline(options):
             #create minc slices for registration
             fixed_minc = s.defer(tif_to_minc(
                 tif=smooths[brain.z_section - brain.z_start - 1],
-                volume=MincAtom(smooths[brain.z_section - brain.z_start - 1].path.replace("tiff","mnc")),
+                volume=MincAtom(smooths[brain.z_section - brain.z_start - 1].path.replace("tiff","mnc"),
+                                 output_sub_dir=os.path.join(output_dir, pipeline_name + "_stacked")),
                 stacks_to_volume_options=options.tissue_vision.stacks_to_volume,
                 z_resolution=brain.z_resolution,
                 output_dir=output_dir))
             moving_minc = s.defer(tif_to_minc(
                 tif=smooths[brain.z_section - brain.z_start],
-                volume=MincAtom(smooths[brain.z_section - brain.z_start].path.replace("tiff","mnc")),
+                volume=MincAtom(smooths[brain.z_section - brain.z_start].path.replace("tiff","mnc"),
+                                 output_sub_dir=os.path.join(output_dir, pipeline_name + "_stacked")),
                 stacks_to_volume_options=options.tissue_vision.stacks_to_volume,
                 z_resolution=brain.z_resolution,
                 output_dir=output_dir))
@@ -283,24 +291,28 @@ def tissue_vision_pipeline(options):
 
             # create like file from first section
             smooth_volume_1_like = MincAtom(os.path.join(output_dir, pipeline_name + "_stacked",
-                                                         brain.name + "_" + anatomical + "_stacked_like.mnc"))
+                                                         brain.name + "_" + anatomical + "_stacked_like.mnc"),
+                                 output_sub_dir=os.path.join(output_dir, pipeline_name + "_stacked"))
             s.defer(get_like(img=smooth_volume_1, ref=smooth_volume_2,
                              like=smooth_volume_1_like, output_dir=output_dir))
             binary_volume_1_like = MincAtom(os.path.join(output_dir, pipeline_name + "_stacked",
-                                                         brain.name + "_" + binary + "_stacked_like.mnc"))
+                                                         brain.name + "_" + binary + "_stacked_like.mnc"),
+                                 output_sub_dir=os.path.join(output_dir, pipeline_name + "_stacked"))
             s.defer(get_like(img=binary_volume_1, ref=binary_volume_2,
                              like=binary_volume_1_like, output_dir=output_dir))
 
             #transform the second section
             smooth_volume_2_transformed = MincAtom(os.path.join(output_dir, pipeline_name + "_stacked",
-                                                brain.name + "_" + anatomical + "_stacked_2_transformed.mnc"))
+                                                brain.name + "_" + anatomical + "_stacked_2_transformed.mnc"),
+                                 output_sub_dir=os.path.join(output_dir, pipeline_name + "_stacked"))
             s.defer(mincresample(img = smooth_volume_2,
                                  xfm = xfm_concat,
                                  like = smooth_volume_1_like,
                                  resampled = smooth_volume_2_transformed,
                                  output_dir = output_dir))
             binary_volume_2_transformed = MincAtom(os.path.join(output_dir, pipeline_name + "_stacked",
-                                                    brain.name + "_" + binary + "_stacked_2_transformed.mnc"))
+                                                    brain.name + "_" + binary + "_stacked_2_transformed.mnc"),
+                                 output_sub_dir=os.path.join(output_dir, pipeline_name + "_stacked"))
             s.defer(mincresample(img=binary_volume_2,
                                  xfm=xfm_concat,
                                  like=binary_volume_1_like,
@@ -319,7 +331,8 @@ def tissue_vision_pipeline(options):
 # Step 4: Run autocrop to resample to isotropic
 #############################
         smooth_volume_isotropic = MincAtom(os.path.join(output_dir, pipeline_name + "_stacked",
-                                                        brain.name + "_" + anatomical + "_stacked_isotropic.mnc"))
+                                                        brain.name + "_" + anatomical + "_stacked_isotropic.mnc"),
+                                 output_sub_dir=os.path.join(output_dir, pipeline_name + "_stacked"))
         smooth_volume_isotropic_results = s.defer(autocrop(
             isostep = options.tissue_vision.stacks_to_volume.plane_resolution,
             img = smooth_volume,
@@ -328,7 +341,8 @@ def tissue_vision_pipeline(options):
         all_smooth_volume_isotropic_results.append(smooth_volume_isotropic_results)
 
         binary_volume_isotropic = MincAtom(os.path.join(output_dir, pipeline_name + "_stacked",
-                                                 brain.name + "_" + binary + "_stacked_isotropic.mnc"))
+                                                 brain.name + "_" + binary + "_stacked_isotropic.mnc"),
+                                 output_sub_dir=os.path.join(output_dir, pipeline_name + "_stacked"))
         binary_volume_isotropic_results = s.defer(autocrop(
             isostep = options.tissue_vision.stacks_to_volume.plane_resolution,
             img = binary_volume,
@@ -345,7 +359,8 @@ def tissue_vision_pipeline(options):
         z_pad = options.tissue_vision.autocrop.z_pad
 
         smooth_padded = MincAtom(os.path.join(output_dir, pipeline_name + "_stacked",
-                                                        brain.name + "_" + anatomical + "_padded.mnc"))
+                                              brain.name + "_" + anatomical + "_padded.mnc"),
+                                 output_sub_dir=os.path.join(output_dir, pipeline_name + "_stacked"))
         smooth_pad_results = s.defer(autocrop(
             img = smooth_volume_isotropic,
             autocropped = smooth_padded,
@@ -357,7 +372,8 @@ def tissue_vision_pipeline(options):
         reconstructed_mincs.append(smooth_pad_results)
 
         binary_padded = MincAtom(os.path.join(output_dir, pipeline_name + "_stacked",
-                                                        brain.name + "_" + binary + "_padded.mnc"))
+                                                        brain.name + "_" + binary + "_padded.mnc"),
+                                 output_sub_dir=os.path.join(output_dir, pipeline_name + "_stacked"))
         binary_pad_results = s.defer(autocrop(
             img = binary_volume_isotropic,
             autocropped = binary_padded,
@@ -368,7 +384,6 @@ def tissue_vision_pipeline(options):
         all_binary_pad_results.append(binary_pad_results)
         reconstructed_mincs.append(binary_pad_results)
 
-    #TODO --output-dir currently breaks this
     s.defer(create_quality_control_images(imgs=reconstructed_mincs, montage_dir = output_dir,
         montage_output=os.path.join(output_dir, pipeline_name + "_stacked", "reconstructed_montage"),
                                           message="reconstructed_mincs"))
