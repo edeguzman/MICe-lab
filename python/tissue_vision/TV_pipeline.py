@@ -18,8 +18,10 @@ from pydpiper.core.arguments import application_parser, registration_parser, exe
 from pydpiper.minc.files import MincAtom
 from pydpiper.minc.registration import autocrop, create_quality_control_images, check_MINC_input_files
 from pydpiper.pipelines.MBM import mbm, MBMConf, mk_mbm_parser
+from pydpiper.pipelines.MAGeT import maget, maget_parsers, fixup_maget_options
 
 from tissue_vision.arguments import TV_stitch_parser, cellprofiler_parser, stacks_to_volume_parser, autocrop_parser
+
 from tissue_vision.reconstruction import TV_stitch_wrap, cellprofiler_wrap, stacks_to_volume, \
     antsRegistration, get_like, tif_to_minc, get_through_plane_xfm, concat_xfm, mincresample, mincmath
 from tissue_vision.TV_stitch import get_params
@@ -408,7 +410,8 @@ def tissue_vision_pipeline(options):
 
         mbm_result = s.defer(mbm(imgs=imgs, options=options,
                                  prefix=options.application.pipeline_name,
-                                 output_dir=output_dir))
+                                 output_dir=output_dir,
+                                 with_maget=False))
 
         # create useful CSVs (note the files listed therein won't yet exist ...):
         transforms = mbm_result.xfms.assign(native_file=lambda df: df.rigid_xfm.apply(lambda x: x.source),
@@ -427,10 +430,6 @@ def tissue_vision_pipeline(options):
 
         analysis = transforms.merge(determinants, left_on="lsq12_nlin_xfm", right_on="inv_xfm", how='inner')\
             .drop(["xfm", "inv_xfm"], axis=1)
-        if options.mbm.segmentation.run_maget:
-            maget_df = pd.DataFrame(data={'label_file': [result.labels.path for result in mbm_result.maget_result],
-                                          'native_file': [result.orig_path for result in mbm_result.maget_result]})
-            analysis = analysis.merge(maget_df, on="native_file")
 
         if options.application.files:
             analysis.to_csv("analysis.csv", index=False)
@@ -439,6 +438,27 @@ def tissue_vision_pipeline(options):
             csv_file["file"] = transforms.native_file
             csv_file.merge(analysis, left_on="file", right_on="native_file").drop(["native_file"], axis=1)\
                 .to_csv("analysis.csv",index=False)
+
+#############################
+# Step 7: Register consensus average to ABI tissuevision Atlas
+#############################
+
+        import copy
+        maget_options = copy.deepcopy(options)  #Namespace(maget=options)
+        maget_options.maget = options.maget
+
+        fixup_maget_options(maget_options=maget_options.maget,
+                            nlin_options=maget_options.mbm.nlin,
+                            lsq12_options=maget_options.mbm.lsq12)
+        del maget_options.mbm
+        maget_result = s.defer(maget([mbm_result.avg_img],
+                                     options=maget_options,
+                                     output_dir=mbm_result.avg_img.output_sub_dir,
+                                     prefix = options.application.pipeline_name))
+        # if options.mbm.segmentation.run_maget:
+        #     maget_df = pd.DataFrame(data={'label_file': [result.labels.path for result in mbm_result.maget_result],
+        #                                   'native_file': [result.orig_path for result in mbm_result.maget_result]})
+        #     analysis = analysis.merge(maget_df, on="native_file")
     return Result(stages=s, output=())
 
 #############################
@@ -463,8 +483,10 @@ if __name__ == "__main__":
     #this is needed as adding the parser without passing the flags breaks
     if "--run-mbm" in sys.argv[1:]:
         p = CompoundParser([application_parser, registration_parser, execution_parser,
-                           AnnotatedParser(parser=mk_tissue_vision_parser(), namespace='tissue_vision'),
-                           AnnotatedParser(parser=mk_mbm_parser(with_common_space=False), namespace="mbm")])
+                            AnnotatedParser(parser=mk_tissue_vision_parser(), namespace='tissue_vision'),
+                            AnnotatedParser(parser=mk_mbm_parser(with_common_space=False, with_maget=False),
+                                            namespace="mbm"),
+                            AnnotatedParser(parser=maget_parsers, namespace="maget", prefix="maget")])
 
         # index-based reaching into the mbm-lsq6 parser to turn off
         p.parsers[-1].parser.parsers[0].parser.argparser.set_defaults(inormalize=False)
