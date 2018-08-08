@@ -447,10 +447,10 @@ def tissue_vision_pipeline(options):
         maget_options = copy.deepcopy(options)  #Namespace(maget=options)
         maget_options.maget = options.maget
 
-        fixup_maget_options(maget_options=maget_options.maget,
-                            nlin_options=maget_options.mbm.nlin,
-                            lsq12_options=maget_options.mbm.lsq12)
-        del maget_options.mbm
+        # fixup_maget_options(maget_options=maget_options.maget,
+        #                     nlin_options=maget_options.mbm.nlin,
+        #                     lsq12_options=maget_options.mbm.lsq12)
+        # del maget_options.mbm
         maget_result = s.defer(maget([mbm_result.avg_img],
                                      options=maget_options,
                                      output_dir=mbm_result.avg_img.output_sub_dir,
@@ -489,8 +489,8 @@ if __name__ == "__main__":
                             AnnotatedParser(parser=maget_parsers, namespace="maget", prefix="maget")])
 
         # index-based reaching into the mbm-lsq6 parser to turn off
-        p.parsers[-1].parser.parsers[0].parser.argparser.set_defaults(inormalize=False)
-        p.parsers[-1].parser.parsers[0].parser.argparser.set_defaults(nuc=False)
+        p.parsers[-2].parser.parsers[0].parser.argparser.set_defaults(inormalize=False)
+        p.parsers[-2].parser.parsers[0].parser.argparser.set_defaults(nuc=False)
 
     else:
         p = CompoundParser([application_parser, registration_parser, execution_parser,
