@@ -468,17 +468,16 @@ def tissue_vision_pipeline(options):
         init_model = get_registration_targets_from_init_model(init_model_standard_file=options.mbm.lsq6.target_file,
                                                               output_dir=output_dir,
                                                               pipeline_name=pipeline_name)
-
         for mbm_xfm, binary_pad, binary_resampled in \
-                zip(mbm_result.xfms.lsq12_nlin_xfm, all_binary_pad_results, all_binary_resampled):
+                zip(mbm_result.xfms.overall_xfm, all_binary_pad_results, all_binary_resampled):
 
-            full_xfm = s.defer(xfmconcat([init_model.xfm_to_standard, mbm_xfm.xfm,lsq12_nlin_result.xfm]))
+            full_xfm = s.defer(xfmconcat([mbm_xfm.xfm, lsq12_nlin_result.xfm]))
             all_full_xfms.append(full_xfm)
             all_binary_resampled.append(s.defer(mincresample(img=binary_pad,
-                                                     xfm=full_xfm,
-                                                     like=atlas_target,
-                                                     resampled=binary_resampled,
-                                                     output_dir=output_dir)))
+                                                             xfm=full_xfm,
+                                                             like=atlas_target,
+                                                             resampled=binary_resampled,
+                                                             output_dir=output_dir)))
 
         if options.application.files:
             analysis.to_csv("analysis.csv", index=False)
