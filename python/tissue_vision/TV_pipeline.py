@@ -46,7 +46,7 @@ def get_brains(options):
     if options.files:
         raise ValueError("you used --files; please use --csv-file")
 
-    csv = pd.read_csv(options.csv_file)
+    csv = pd.read_csv(options.csv_file, dtype='str')
 
     brains = [Brain(FileAtom(brain_directory), brain_name, z_start, z_end, z_section)
               for brain_directory, brain_name, z_start, z_end,z_section
