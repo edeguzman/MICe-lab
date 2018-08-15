@@ -16,7 +16,9 @@ from pydpiper.execution.application import mk_application, execute
 from pydpiper.core.files import FileAtom
 from pydpiper.core.arguments import application_parser, registration_parser, execution_parser, parse
 from pydpiper.minc.files import MincAtom
-from pydpiper.minc.registration import autocrop, create_quality_control_images, check_MINC_input_files
+from pydpiper.minc.registration import autocrop, create_quality_control_images, check_MINC_input_files, lsq12_nlin, \
+    get_linear_configuration_from_options, LinearTransType, get_nonlinear_component, concat_xfmhandlers, \
+    get_registration_targets_from_init_model, xfmconcat
 from pydpiper.pipelines.MBM import mbm, MBMConf, mk_mbm_parser
 from pydpiper.pipelines.MAGeT import maget, maget_parsers, fixup_maget_options
 
@@ -77,6 +79,7 @@ def tissue_vision_pipeline(options):
     all_smooth_pad_results = []
     all_binary_pad_results = []
     reconstructed_mincs = []
+    all_binary_resampled = []
 
 #############################
 # Step 1: Run TV_stitch.py
@@ -374,6 +377,8 @@ def tissue_vision_pipeline(options):
 
         binary_padded = MincAtom(os.path.join(output_dir, pipeline_name + "_stacked",
                                                         brain.name + "_" + binary + "_padded.mnc"))
+        binary_resampled = MincAtom(os.path.join(output_dir, pipeline_name + "_stacked",
+                                          brain.name + "_" + binary + "_resampled.mnc"))
         binary_pad_results = s.defer(autocrop(
             img = binary_volume_isotropic,
             autocropped = binary_padded,
@@ -382,6 +387,7 @@ def tissue_vision_pipeline(options):
             z_pad = z_pad
         ))
         all_binary_pad_results.append(binary_pad_results)
+        all_binary_resampled.append(binary_resampled)
         reconstructed_mincs.append(binary_pad_results)
 
     #TODO overlay them
@@ -431,6 +437,49 @@ def tissue_vision_pipeline(options):
         analysis = transforms.merge(determinants, left_on="lsq12_nlin_xfm", right_on="inv_xfm", how='inner')\
             .drop(["xfm", "inv_xfm"], axis=1)
 
+
+
+#############################
+# Step 7: Register consensus average to ABI tissuevision Atlas
+#############################
+        lsq12_conf = get_linear_configuration_from_options(conf=options.mbm.lsq12,
+                                                           transform_type=LinearTransType.lsq12,
+                                                           file_resolution=options.registration.resolution)
+        nlin_component = get_nonlinear_component(reg_method=options.mbm.nlin.reg_method)
+
+        atlas_target = MincAtom(name=options.tissue_vision.final_registration.atlas_target,
+                                orig_name=options.tissue_vision.final_registration.atlas_target,
+                                mask=MincAtom(name=options.tissue_vision.final_registration.atlas_target_mask,
+                                              orig_name=options.tissue_vision.final_registration.atlas_target_mask))
+
+        lsq12_nlin_result = s.defer(lsq12_nlin(source=mbm_result.avg_img,
+                                               target=atlas_target,
+                                               lsq12_conf=lsq12_conf,
+                                               nlin_module=nlin_component,
+                                               nlin_options=options.mbm.nlin.nlin_protocol,
+                                               resolution=options.registration.resolution,
+                                               resample_source=False
+                                               ))
+
+#############################
+# Step 8: Resample binary volumes to ABI tissuevision Atlas space
+#############################
+        all_full_xfms = []
+        init_model = get_registration_targets_from_init_model(init_model_standard_file=options.mbm.lsq6.target_file,
+                                                              output_dir=output_dir,
+                                                              pipeline_name=pipeline_name)
+
+        for mbm_xfm, binary_pad, binary_resampled in \
+                zip(mbm_result.xfms.lsq12_nlin_xfm, all_binary_pad_results, all_binary_resampled):
+
+            full_xfm = s.defer(xfmconcat([init_model.xfm_to_standard, mbm_xfm.xfm,lsq12_nlin_result.xfm]))
+            all_full_xfms.append(full_xfm)
+            all_binary_resampled.append(s.defer(mincresample(img=binary_pad,
+                                                     xfm=full_xfm,
+                                                     like=atlas_target,
+                                                     resampled=binary_resampled,
+                                                     output_dir=output_dir)))
+
         if options.application.files:
             analysis.to_csv("analysis.csv", index=False)
         if options.application.csv_file:
@@ -438,33 +487,22 @@ def tissue_vision_pipeline(options):
             csv_file["file"] = transforms.native_file
             csv_file.merge(analysis, left_on="file", right_on="native_file").drop(["native_file"], axis=1)\
                 .to_csv("analysis.csv",index=False)
-
-#############################
-# Step 7: Register consensus average to ABI tissuevision Atlas
-#############################
-
-        import copy
-        maget_options = copy.deepcopy(options)  #Namespace(maget=options)
-        maget_options.maget = options.maget
-
-        # fixup_maget_options(maget_options=maget_options.maget,
-        #                     nlin_options=maget_options.mbm.nlin,
-        #                     lsq12_options=maget_options.mbm.lsq12)
-        # del maget_options.mbm
-        maget_result = s.defer(maget([mbm_result.avg_img],
-                                     options=maget_options,
-                                     output_dir=mbm_result.avg_img.output_sub_dir,
-                                     prefix = options.application.pipeline_name))
-        # if options.mbm.segmentation.run_maget:
-        #     maget_df = pd.DataFrame(data={'label_file': [result.labels.path for result in mbm_result.maget_result],
-        #                                   'native_file': [result.orig_path for result in mbm_result.maget_result]})
-        #     analysis = analysis.merge(maget_df, on="native_file")
     return Result(stages=s, output=())
 
 #############################
 # Combine Parser & Make Application
 #############################
 def mk_tissue_vision_parser():
+    p = ArgParser(add_help=False)
+    p.add_argument("--atlas-target", dest="atlas_target",
+                   type=str,
+                   default=None,
+                   help="Register the consensus average to the ABI Atlas")
+    p.add_argument("--atlas-target-mask", dest="atlas_target_mask",
+                   type=str,
+                   default=None,
+                   help="Register the consensus average to the ABI Atlas")
+    registration_parser = AnnotatedParser(parser=BaseParser(p, 'tissue_vision'), namespace='final_registration')
     p = ArgParser(add_help=False)
     p.add_argument("--run-mbm", dest="run_mbm",
                    action="store_true", default=False,
@@ -473,7 +511,7 @@ def mk_tissue_vision_parser():
     return CompoundParser([TV_stitch_parser,
               cellprofiler_parser,
               stacks_to_volume_parser,
-              autocrop_parser, mbm_parser])
+              autocrop_parser, registration_parser, mbm_parser])
 
 #############################
 # Run
@@ -485,12 +523,11 @@ if __name__ == "__main__":
         p = CompoundParser([application_parser, registration_parser, execution_parser,
                             AnnotatedParser(parser=mk_tissue_vision_parser(), namespace='tissue_vision'),
                             AnnotatedParser(parser=mk_mbm_parser(with_common_space=False, with_maget=False),
-                                            namespace="mbm"),
-                            AnnotatedParser(parser=maget_parsers, namespace="maget", prefix="maget")])
+                                            namespace="mbm")])
 
-        # index-based reaching into the mbm-lsq6 parser to turn off
-        p.parsers[-2].parser.parsers[0].parser.argparser.set_defaults(inormalize=False)
-        p.parsers[-2].parser.parsers[0].parser.argparser.set_defaults(nuc=False)
+        # hacky index-based reaching into the mbm-lsq6 parser to turn off
+        p.parsers[-1].parser.parsers[0].parser.argparser.set_defaults(inormalize=False)
+        p.parsers[-1].parser.parsers[0].parser.argparser.set_defaults(nuc=False)
 
     else:
         p = CompoundParser([application_parser, registration_parser, execution_parser,
