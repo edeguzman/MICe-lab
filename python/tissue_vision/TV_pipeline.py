@@ -434,9 +434,6 @@ def tissue_vision_pipeline(options):
             .applymap(maybe_deref_path)
         determinants.to_csv("determinants.csv", index=False)
 
-        analysis = transforms.merge(determinants, left_on="lsq12_nlin_xfm", right_on="inv_xfm", how='inner')\
-            .drop(["xfm", "inv_xfm"], axis=1)
-
 
 
 #############################
@@ -470,15 +467,17 @@ def tissue_vision_pipeline(options):
                                                               pipeline_name=pipeline_name)
         for mbm_xfm, binary_pad, binary_resampled in \
                 zip(mbm_result.xfms.overall_xfm, all_binary_pad_results, all_binary_resampled):
-
             full_xfm = s.defer(xfmconcat([mbm_xfm.xfm, lsq12_nlin_result.xfm]))
             all_full_xfms.append(full_xfm)
-            all_binary_resampled.append(s.defer(mincresample(img=binary_pad,
-                                                             xfm=full_xfm,
-                                                             like=atlas_target,
-                                                             resampled=binary_resampled,
-                                                             output_dir=output_dir)))
+            s.defer(mincresample(img=binary_pad,
+                                 xfm=full_xfm,
+                                 like=atlas_target,
+                                 resampled=binary_resampled,
+                                 output_dir=output_dir))
 
+        transforms=transforms.assign(binary_resampled=[minc_atom.path for minc_atom in all_binary_resampled])
+        analysis = transforms.merge(determinants, left_on="lsq12_nlin_xfm", right_on="inv_xfm", how='inner') \
+            .drop(["xfm", "inv_xfm"], axis=1)
         if options.application.files:
             analysis.to_csv("analysis.csv", index=False)
         if options.application.csv_file:
