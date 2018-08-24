@@ -390,6 +390,15 @@ def tissue_vision_pipeline(options):
         all_binary_resampled.append(binary_resampled)
         reconstructed_mincs.append(binary_pad_results)
 
+    csv_file = pd.read_csv(options.application.csv_file)
+    reconstructed = pd.DataFrame({'brain_directory': [brain.brain_directory.path for brain in brains],
+                                  'z_slices': [brain.z for brain in brains],
+                                  'z_resolution': [brain.z_resolution for brain in brains],
+                                  'smooth_padded': [smooth_padded.path for smooth_padded in all_smooth_pad_results],
+                                  'binary_padded': [binary_padded.path for binary_padded in all_binary_pad_results]})
+
+    reconstructed = csv_file.merge(reconstructed)
+    reconstructed.to_csv("reconstructed.csv", index=False)
     #TODO overlay them
     # s.defer(create_quality_control_images(imgs=reconstructed_mincs, montage_dir = output_dir,
     #     montage_output=os.path.join(output_dir, pipeline_name + "_stacked", "reconstructed_montage"),
@@ -478,13 +487,8 @@ def tissue_vision_pipeline(options):
         transforms=transforms.assign(binary_resampled=[minc_atom.path for minc_atom in all_binary_resampled])
         analysis = transforms.merge(determinants, left_on="lsq12_nlin_xfm", right_on="inv_xfm", how='inner') \
             .drop(["xfm", "inv_xfm"], axis=1)
-        if options.application.files:
-            analysis.to_csv("analysis.csv", index=False)
-        if options.application.csv_file:
-            csv_file = pd.read_csv(options.application.csv_file)
-            csv_file["file"] = transforms.native_file
-            csv_file.merge(analysis, left_on="file", right_on="native_file").drop(["native_file"], axis=1)\
-                .to_csv("analysis.csv",index=False)
+        reconstructed.merge(analysis, left_on="smooth_padded", right_on="native_file").drop(["native_file"], axis=1)\
+            .to_csv("analysis.csv",index=False)
     return Result(stages=s, output=())
 
 #############################
