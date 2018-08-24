@@ -408,11 +408,11 @@ def tissue_vision_pipeline(options):
                                           montage_output=os.path.join(output_dir, pipeline_name + "_stacked",
                                                                       "%s_montage" % anatomical),
                                           message="%s_mincs" % anatomical))
-    #TODO binary images are too dim
-    # s.defer(create_quality_control_images(imgs=all_binary_pad_results, montage_dir=output_dir,
-    #                                       montage_output=os.path.join(output_dir, pipeline_name + "_stacked",
-    #                                                                   "%s_montage" % binary),
-    #                                       message="%s_mincs" % binary))
+    s.defer(create_quality_control_images(imgs=all_binary_pad_results, montage_dir=output_dir,
+                                          montage_output=os.path.join(output_dir, pipeline_name + "_stacked",
+                                                                      "%s_montage" % binary),
+                                          auto_range=True,
+                                          message="%s_mincs" % binary))
 
 #############################
 # Step 6: Run MBM.py
