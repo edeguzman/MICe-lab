@@ -377,7 +377,7 @@ def tissue_vision_pipeline(options):
 
         binary_padded = MincAtom(os.path.join(output_dir, pipeline_name + "_stacked",
                                                         brain.name + "_" + binary + "_padded.mnc"))
-        binary_resampled = MincAtom(os.path.join(output_dir, pipeline_name + "_stacked",
+        binary_resampled = MincAtom(os.path.join(output_dir, pipeline_name + "_resampled",
                                           brain.name + "_" + binary + "_resampled.mnc"))
         binary_pad_results = s.defer(autocrop(
             img = binary_volume_isotropic,
@@ -489,6 +489,12 @@ def tissue_vision_pipeline(options):
             .drop(["xfm", "inv_xfm"], axis=1)
         reconstructed.merge(analysis, left_on="smooth_padded", right_on="native_file").drop(["native_file"], axis=1)\
             .to_csv("analysis.csv",index=False)
+
+        s.defer(create_quality_control_images(imgs=all_binary_resampled, montage_dir=output_dir,
+                                              montage_output=os.path.join(output_dir, pipeline_name + "_resampled",
+                                                                          "%s_montage" % binary),
+                                              auto_range=True,
+                                              message="%s_mincs" % binary))
     return Result(stages=s, output=())
 
 #############################
