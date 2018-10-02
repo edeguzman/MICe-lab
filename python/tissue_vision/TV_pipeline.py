@@ -80,6 +80,7 @@ def tissue_vision_pipeline(options):
     all_binary_pad_results = []
     reconstructed_mincs = []
     all_binary_resampled = []
+    all_atlas_resampled = []
 
 #############################
 # Step 1: Run TV_stitch.py
@@ -379,6 +380,8 @@ def tissue_vision_pipeline(options):
                                                         brain.name + "_" + binary + "_padded.mnc"))
         binary_resampled = MincAtom(os.path.join(output_dir, pipeline_name + "_resampled",
                                           brain.name + "_" + binary + "_resampled.mnc"))
+        atlas_resampled = MincAtom(os.path.join(output_dir, pipeline_name + "_resampled",
+                                          "atlas_to_" + brain.name + "_resampled.mnc"))
         binary_pad_results = s.defer(autocrop(
             img = binary_volume_isotropic,
             autocropped = binary_padded,
@@ -388,6 +391,7 @@ def tissue_vision_pipeline(options):
         ))
         all_binary_pad_results.append(binary_pad_results)
         all_binary_resampled.append(binary_resampled)
+        all_atlas_resampled.append(atlas_resampled)
         reconstructed_mincs.append(binary_pad_results)
 
     csv_file = pd.read_csv(options.application.csv_file)
@@ -474,17 +478,28 @@ def tissue_vision_pipeline(options):
         init_model = get_registration_targets_from_init_model(init_model_standard_file=options.mbm.lsq6.target_file,
                                                               output_dir=output_dir,
                                                               pipeline_name=pipeline_name)
-        for mbm_xfm, binary_pad, binary_resampled in \
-                zip(mbm_result.xfms.overall_xfm, all_binary_pad_results, all_binary_resampled):
+        for mbm_xfm, binary_pad, binary_resampled, atlas_resampled in \
+                zip(mbm_result.xfms.overall_xfm, all_binary_pad_results, all_binary_resampled, all_atlas_resampled):
             full_xfm = s.defer(xfmconcat([mbm_xfm.xfm, lsq12_nlin_result.xfm]))
             all_full_xfms.append(full_xfm)
+
             s.defer(mincresample(img=binary_pad,
                                  xfm=full_xfm,
                                  like=atlas_target,
                                  resampled=binary_resampled,
                                  output_dir=output_dir))
 
-        transforms=transforms.assign(binary_resampled=[minc_atom.path for minc_atom in all_binary_resampled])
+            s.defer(mincresample(img=atlas_resampled,
+                                 xfm=full_xfm,
+                                 like=binary_pad,
+                                 resampled=atlas_resampled,
+                                 output_dir=output_dir,
+                                 invert_xfm=True))
+
+        transforms=transforms.assign(binary_resampled=[minc_atom.path for minc_atom in all_binary_resampled],
+                                     atlas_resampled = [minc_atom.path for minc_atom in all_atlas_resampled],
+                                     full_xfm=[xfm.path for xfm in all_full_xfms])
+
         analysis = transforms.merge(determinants, left_on="lsq12_nlin_xfm", right_on="inv_xfm", how='inner') \
             .drop(["xfm", "inv_xfm"], axis=1)
         reconstructed.merge(analysis, left_on="smooth_padded", right_on="native_file").drop(["native_file"], axis=1)\

@@ -238,9 +238,11 @@ def mincresample(img: MincAtom,
                  xfm: XfmAtom,
                  like: MincAtom,
                  resampled: MincAtom,
-                 output_dir: str):
+                 output_dir: str,
+                 invert_xfm: bool = False):
     stage = CmdStage(inputs=(xfm, like, img), outputs=(resampled,),
                      cmd=['mincresample', '-clobber',
+                          '-invert_transformation' if invert_xfm else '',
                           '-transform %s' % xfm.path,
                           '-like %s' % like.path, img.path, resampled.path],
                      log_file = os.path.join(output_dir, "join_sections.log"))
