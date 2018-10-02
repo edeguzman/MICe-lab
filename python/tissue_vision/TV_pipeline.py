@@ -472,7 +472,7 @@ def tissue_vision_pipeline(options):
                                                ))
 
 #############################
-# Step 8: Resample binary volumes to ABI tissuevision Atlas space
+# Step 8: Resample binary volumes to ABI tissuevision Atlas space and vice versa
 #############################
         all_full_xfms = []
         init_model = get_registration_targets_from_init_model(init_model_standard_file=options.mbm.lsq6.target_file,
