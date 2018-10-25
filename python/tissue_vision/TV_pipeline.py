@@ -478,12 +478,13 @@ def tissue_vision_pipeline(options):
         init_model = get_registration_targets_from_init_model(init_model_standard_file=options.mbm.lsq6.target_file,
                                                               output_dir=output_dir,
                                                               pipeline_name=pipeline_name)
-        for mbm_xfm, binary_pad, binary_resampled, atlas_resampled in \
-                zip(mbm_result.xfms.overall_xfm, all_binary_pad_results, all_binary_resampled, all_atlas_resampled):
-            full_xfm = s.defer(xfmconcat([mbm_xfm.xfm, lsq12_nlin_result.xfm]))
+        all_binary_pad_lsq6 = [xfm_handler._resampled for xfm_handler in mbm_result.xfms.rigid_xfm]
+        for mbm_lsq12_nlin_xfm, binary_pad_lsq6, binary_resampled, atlas_resampled in \
+                zip(mbm_result.xfms.lsq12_nlin_xfm, all_binary_pad_lsq6, all_binary_resampled, all_atlas_resampled):
+            full_xfm = s.defer(xfmconcat([mbm_lsq12_nlin_xfm.xfm, lsq12_nlin_result.xfm]))
             all_full_xfms.append(full_xfm)
 
-            s.defer(mincresample(img=binary_pad,
+            s.defer(mincresample(img=binary_pad_lsq6,
                                  xfm=full_xfm,
                                  like=atlas_target,
                                  resampled=binary_resampled,
@@ -491,7 +492,7 @@ def tissue_vision_pipeline(options):
 
             s.defer(mincresample(img=atlas_resampled,
                                  xfm=full_xfm,
-                                 like=binary_pad,
+                                 like=binary_pad_lsq6,
                                  resampled=atlas_resampled,
                                  output_dir=output_dir,
                                  invert_xfm=True))
