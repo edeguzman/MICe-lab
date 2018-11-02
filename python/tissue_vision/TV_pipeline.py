@@ -490,7 +490,7 @@ def tissue_vision_pipeline(options):
                                  resampled=binary_resampled,
                                  output_dir=output_dir))
 
-            s.defer(mincresample(img=atlas_resampled,
+            s.defer(mincresample(img=atlas_target,
                                  xfm=full_xfm,
                                  like=binary_pad_lsq6,
                                  resampled=atlas_resampled,
