@@ -134,7 +134,7 @@ def _mk_stacks_to_volume_parser():
     p.add_argument("--input-resolution", dest="input_resolution",
                    type=float,
                    default=0.00137,
-                   help="The raw in-plane resolution of the tiles in mm.")
+                   help="The raw in-plane resolution of the tiles in mm. [default = %(default)s]")
     p.add_argument("--plane-resolution", dest="plane_resolution",
                    type=float,
                    default=None,
