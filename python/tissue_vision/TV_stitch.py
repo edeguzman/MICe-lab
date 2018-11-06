@@ -191,12 +191,12 @@ def run_cvFilter(infile,outfile,kernelstr="gauss",kernelwidth=9,filtwidth=1.4):
     return 0
 
 #new code
-def get_params(input,):
+def get_params(input: string):
     # find and compose list of directories to work with
     try:
         fulldirectorylist = glob.glob(input + '-[0-9]*')
         if not fulldirectorylist:
-            raise FatalError("Cannot find input directory(ies).")
+            raise FatalError("Cannot find brain's slice subdirectories in %s" % input)
     except FatalError as e:
         print('Error(%s):' % program_name, e.msg)
         raise SystemExit
