@@ -190,7 +190,7 @@ def run_cvFilter(infile,outfile,kernelstr="gauss",kernelwidth=9,filtwidth=1.4):
     cmdout = run_subprocess(cmdstr)
     return 0
 
-#new code
+#TODO this is duplicated code... really annoying
 def get_params(input: string):
     # find and compose list of directories to work with
     try:
@@ -217,7 +217,8 @@ def get_params(input: string):
                                          [1, TVparamdict['layers']][TVparamdict['Zscan']],
                                          TVparamdict['sectionres']/1000)
     if (len(direclist) != N_z_slices):
-        print("Mismatch in Mosaic file 'sections' (%d) and number of identified directories (%d)" % (
+        #TODO change this to a warning
+        print("Mismatch in Mosaic file 'sections' (%d) and number of identified directories (%d); Don't worry for now." % (
         N_z_slices, len(direclist)))
         N_z_slices = len(direclist)
         TVparamdict['sections'] = N_z_slices
@@ -255,6 +256,7 @@ def generate_preprocessed_images(inputdirectory,starts=[None,None,None],ends=[No
     (N_x,N_y,N_z_slices,N_z_piezo) = (TVparamdict['mcolumns'],TVparamdict['mrows'],\
                                       TVparamdict['sections'],[1,TVparamdict['layers']][TVparamdict['Zscan']])
     if (len(direclist)!=N_z_slices):
+        # TODO change this to a warning
         print("Mismatch in Mosaic file 'sections' (%d) and number of identified directories (%d)"%(N_z_slices,len(direclist)))
         N_z_slices=len(direclist)
         TVparamdict['sections']=N_z_slices
