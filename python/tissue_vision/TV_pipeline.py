@@ -64,12 +64,6 @@ def tissue_vision_pipeline(options):
     cppline = FileAtom(options.tissue_vision.cellprofiler.cellprofiler_pipeline)
 
     # Hold results obtained in the loop
-    all_TV_stitch_results = []
-    all_cellprofiler_results = []
-    all_binary_volume_results = []
-    all_smooth_volume_results = []
-    all_binary_volume_isotropic_results = []
-    all_smooth_volume_isotropic_results = []
     all_smooth_pad_results = []
     all_binary_pad_results = []
     reconstructed_mincs = []
@@ -104,7 +98,6 @@ def tissue_vision_pipeline(options):
                                                     Zend=brain.z_end,
                                                     output_dir = output_dir
                                                     ))
-            all_TV_stitch_results.append(TV_stitch_result)
 
         if brain.z_section:
             TV_stitch_result = s.defer(TV_stitch_wrap(brain_directory=brain.brain_directory,
@@ -115,7 +108,6 @@ def tissue_vision_pipeline(options):
                                                       Zend=brain.z_section - 1,
                                                       output_dir=output_dir
                                                       ))
-            all_TV_stitch_results.append(TV_stitch_result)
 
             TV_stitch_result = s.defer(TV_stitch_wrap(brain_directory=brain.brain_directory,
                                                       brain_name=brain.name,
@@ -125,7 +117,6 @@ def tissue_vision_pipeline(options):
                                                       Zend=brain.z_end,
                                                       output_dir=output_dir
                                                       ))
-            all_TV_stitch_results.append(TV_stitch_result)
 
 #TODO write a when_finished_hook to tell the user that this finished.
 #############################
@@ -162,7 +153,6 @@ def tissue_vision_pipeline(options):
                                                               Zend = brain.z_end,
                                                               output_dir = output_dir
                                                              ))
-        all_cellprofiler_results.append(cellprofiler_result)
 
 #############################
 # Step 3: Run stacks_to_volume.py
@@ -183,7 +173,6 @@ def tissue_vision_pipeline(options):
                 z_resolution=brain.z_resolution,
                 output_dir=output_dir
                 ))
-            all_smooth_volume_results.append(smooth_slices_to_volume_results)
 
             binary_slices_to_volume_results = s.defer(stacks_to_volume(
                 slices = binaries,
@@ -193,7 +182,6 @@ def tissue_vision_pipeline(options):
                 uniform_sum = True,
                 output_dir=output_dir
                 ))
-            all_binary_volume_results.append(binary_slices_to_volume_results)
 
         if brain.z_section:
 
@@ -208,7 +196,6 @@ def tissue_vision_pipeline(options):
                 z_resolution=brain.z_resolution,
                 output_dir=output_dir
             ))
-            all_smooth_volume_results.append(smooth_slices_to_volume_results)
 
             smooth_volume_2 = MincAtom(os.path.join(output_dir, pipeline_name + "_stacked",
                                                   brain.name + "_" + anatomical + "_stacked_2.mnc"),
@@ -221,8 +208,6 @@ def tissue_vision_pipeline(options):
                 z_resolution=brain.z_resolution,
                 output_dir=output_dir
             ))
-            all_smooth_volume_results.append(smooth_slices_to_volume_results)
-
 
             binary_volume_1 = MincAtom(os.path.join(output_dir, pipeline_name + "_stacked",
                                                   brain.name + "_" + binary + "_stacked_1.mnc"),
@@ -235,7 +220,6 @@ def tissue_vision_pipeline(options):
                 uniform_sum=True,
                 output_dir=output_dir
             ))
-            all_binary_volume_results.append(binary_slices_to_volume_results)
 
             binary_volume_2 = MincAtom(os.path.join(output_dir, pipeline_name + "_stacked",
                                                   brain.name + "_" + binary + "_stacked_2.mnc"),
@@ -248,7 +232,6 @@ def tissue_vision_pipeline(options):
                 uniform_sum=True,
                 output_dir=output_dir
             ))
-            all_binary_volume_results.append(binary_slices_to_volume_results)
 
             #create minc slices for registration
             fixed_minc = s.defer(tif_to_minc(
@@ -337,7 +320,6 @@ def tissue_vision_pipeline(options):
             img = smooth_volume,
             autocropped = smooth_volume_isotropic
         ))
-        all_smooth_volume_isotropic_results.append(smooth_volume_isotropic_results)
 
         binary_volume_isotropic = MincAtom(os.path.join(output_dir, pipeline_name + "_stacked",
                                                  brain.name + "_" + binary + "_stacked_isotropic.mnc"),
@@ -348,7 +330,6 @@ def tissue_vision_pipeline(options):
             autocropped = binary_volume_isotropic,
             nearest_neighbour = True
         ))
-        all_binary_volume_isotropic_results.append(binary_volume_isotropic_results)
 
 #############################
 # Step 5: Run autocrop to pad the isotropic images
