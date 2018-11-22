@@ -12,15 +12,14 @@ import pandas as pd
 from pydpiper.core.stages import Stages, Result
 from pydpiper.core.arguments import CompoundParser, AnnotatedParser, BaseParser
 from pydpiper.core.util import maybe_deref_path
-from pydpiper.execution.application import mk_application, execute
+from pydpiper.execution.application import execute
 from pydpiper.core.files import FileAtom
 from pydpiper.core.arguments import application_parser, registration_parser, execution_parser, parse
 from pydpiper.minc.files import MincAtom
 from pydpiper.minc.registration import autocrop, create_quality_control_images, check_MINC_input_files, lsq12_nlin, \
-    get_linear_configuration_from_options, LinearTransType, get_nonlinear_component, concat_xfmhandlers, \
+    get_linear_configuration_from_options, LinearTransType, get_nonlinear_component, \
     get_registration_targets_from_init_model, xfmconcat
-from pydpiper.pipelines.MBM import mbm, MBMConf, mk_mbm_parser
-from pydpiper.pipelines.MAGeT import maget, maget_parsers, fixup_maget_options
+from pydpiper.pipelines.MBM import mbm, mk_mbm_parser
 
 from tissue_vision.arguments import TV_stitch_parser, cellprofiler_parser, stacks_to_volume_parser, autocrop_parser
 
@@ -62,11 +61,6 @@ def tissue_vision_pipeline(options):
 
     brains = get_brains(options.application) # List(Brain,...)
 
-    # The new solution is to just wrap cellprofiler with cellprofiler.sh and load correct modules.
-    env_vars = {}
-    # env_vars['PATH'] = options.tissue_vision.cellprofiler.path
-    # env_vars['PYTHONPATH'] = options.tissue_vision.cellprofiler.python_path
-    # env_vars['LD_LIBRARY_PATH'] = options.tissue_vision.cellprofiler.ld_library_path
     cppline = FileAtom(options.tissue_vision.cellprofiler.cellprofiler_pipeline)
 
     # Hold results obtained in the loop
@@ -166,8 +160,7 @@ def tissue_vision_pipeline(options):
                                                               binaries = binaries,
                                                               Zstart = brain.z_start,
                                                               Zend = brain.z_end,
-                                                              output_dir = output_dir,
-                                                              env_vars = env_vars
+                                                              output_dir = output_dir
                                                              ))
         all_cellprofiler_results.append(cellprofiler_result)
 
