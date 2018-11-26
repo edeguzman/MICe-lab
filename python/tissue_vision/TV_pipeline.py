@@ -4,7 +4,6 @@ import os
 import sys
 
 from configargparse import Namespace, ArgParser
-from argparse import ArgumentError
 from typing import Dict, List, Union
 
 import pandas as pd

@@ -67,8 +67,7 @@ def cellprofiler_wrap(stitched: List[FileAtom],
                        binaries: List[FileAtom],
                        Zstart: int,
                        Zend: int,
-                       output_dir: str,
-                       env_vars: Dict[str, str]):
+                       output_dir: str):
     s = Stages()
 
     stage = CmdStage(inputs=(stitched+[cellprofiler_pipeline]), outputs=(batch_data,),
@@ -76,8 +75,7 @@ def cellprofiler_wrap(stitched: List[FileAtom],
                           '-p %s' % cellprofiler_pipeline.path,
                           '-i %s' % stitched[0].dir,
                           '-o %s' % batch_data.dir],
-                     log_file = os.path.join(output_dir,"cellprofiler.log"),
-                     env_vars = env_vars)
+                     log_file = os.path.join(output_dir,"cellprofiler.log"))
     s.add(stage)
     def set_memory(stage: CmdStage, mem_cfg: NamedTuple, z):
         img_size = os.stat(stitched[0].path).st_size
@@ -89,8 +87,7 @@ def cellprofiler_wrap(stitched: List[FileAtom],
                               '-p %s' % batch_data.path,
                               '-f %s' % z,
                               '-l %s' % z],
-                         log_file=os.path.join(output_dir, "cellprofiler.log"),
-                         env_vars=env_vars)
+                         log_file=os.path.join(output_dir, "cellprofiler.log"))
 
 
         #z=z is evaluated at this point, to avoid the problem of how python handles evironment.
