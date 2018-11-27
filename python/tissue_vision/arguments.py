@@ -114,10 +114,10 @@ def _mk_cellprofiler_parser():
     #                type=int,
     #                default=None,
     #                help="The one-based index of the last image set to process")
-    p.add_argument("--binary-name", dest="binary_name",
+    p.add_argument("--counts-name", dest="counts_name",
                    type=str,
                    default=None,
-                   help="Specify the name of the binary images outputted by cellprofiler.")
+                   help="Specify the name of the counts images outputted by cellprofiler.")
     p.add_argument("--anatomical-name", dest="anatomical_name",
                    type=str,
                    default=None,
