@@ -163,3 +163,23 @@ def _mk_autocrop_parser():
     return p
 
 autocrop_parser = AnnotatedParser(parser=BaseParser(_mk_autocrop_parser(), "autocrop"), namespace="autocrop")
+
+def _mk_consensus_to_atlas_parser():
+    p = ArgParser(add_help=False)
+    p.add_argument("--atlas-target", dest="atlas_target",
+                   type=str,
+                   default=None,
+                   help="Register the consensus average to the ABI Atlas")
+    p.add_argument("--atlas-target-label", dest="atlas_target_label",
+                   type=str,
+                   default=None,
+                   help="Register the consensus average to the ABI Atlas")
+    p.add_argument("--atlas-target-mask", dest="atlas_target_mask",
+                   type=str,
+                   default=None,
+                   help="Register the consensus average to the ABI Atlas")
+    return p
+
+consensus_to_atlas_parser = AnnotatedParser(parser=BaseParser(_mk_consensus_to_atlas_parser(), 'consensus_to_atlas'),
+                                            namespace='consensus_to_atlas')
+

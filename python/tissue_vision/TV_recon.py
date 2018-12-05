@@ -64,9 +64,9 @@ def tv_recon_pipeline(options):
 
     # Hold results obtained in the loop
     all_anatomical_pad_results = []
-    all_counts_pad_results = []
+    all_count_pad_results = []
     reconstructed_mincs = []
-    all_counts_resampled = []
+    all_count_resampled = []
     all_atlas_resampled = []
 
 #############################
@@ -122,32 +122,32 @@ def tv_recon_pipeline(options):
 # Step 2: Run cellprofiler
 #############################
         anatomical = options.cellprofiler.anatomical_name
-        counts = options.cellprofiler.counts_name
+        count = options.cellprofiler.count_name
 
         brain.cp_directory = os.path.join(output_dir, pipeline_name + "_cellprofiler", brain.name)
         brain.batch_data = FileAtom(os.path.join(brain.cp_directory,"Batch_data.h5"))
 
         overLays = []
         anatomicals = []
-        countss = []
+        counts = []
 
         for z in range(brain.z_start, brain.z_end+1):
             brain.slice_overLay = FileAtom(
                 os.path.join(brain.cp_directory, brain.name + "_Z%04d_overLay.tiff" % z))
             brain.slice_anatomical = FileAtom(
                 os.path.join(brain.cp_directory, brain.name + "_Z%04d_" % z + anatomical + ".tiff"))
-            brain.slice_counts = FileAtom(
-                os.path.join(brain.cp_directory, brain.name + "_Z%04d_" % z + counts + ".tiff"))
+            brain.slice_count = FileAtom(
+                os.path.join(brain.cp_directory, brain.name + "_Z%04d_" % z + count + ".tiff"))
             overLays.append(brain.slice_overLay)
             anatomicals.append(brain.slice_anatomical)
-            countss.append(brain.slice_counts)
+            counts.append(brain.slice_count)
 
         cellprofiler_result = s.defer(cellprofiler_wrap(stitched = stitched,
                                                               cellprofiler_pipeline = cppline,
                                                               batch_data = brain.batch_data,
                                                               overLays = overLays,
                                                               anatomicals = anatomicals,
-                                                              counts = countss,
+                                                              count = counts,
                                                               Zstart = brain.z_start,
                                                               Zend = brain.z_end,
                                                               output_dir = output_dir
@@ -159,8 +159,8 @@ def tv_recon_pipeline(options):
         anatomical_volume = MincAtom(os.path.join(output_dir, pipeline_name + "_stacked",
                                                   brain.name + "_" + anatomical + "_stacked.mnc"),
                                  output_sub_dir=os.path.join(output_dir, pipeline_name + "_stacked"))
-        counts_volume = MincAtom(os.path.join(output_dir, pipeline_name + "_stacked",
-                                      brain.name + "_" + counts + "_stacked.mnc"),
+        count_volume = MincAtom(os.path.join(output_dir, pipeline_name + "_stacked",
+                                      brain.name + "_" + count + "_stacked.mnc"),
                                  output_sub_dir=os.path.join(output_dir, pipeline_name + "_stacked"))
 
         if not brain.z_section:
@@ -173,9 +173,9 @@ def tv_recon_pipeline(options):
                 output_dir=output_dir
                 ))
 
-            counts_slices_to_volume_results = s.defer(stacks_to_volume(
-                slices = countss,
-                volume = counts_volume,
+            count_slices_to_volume_results = s.defer(stacks_to_volume(
+                slices = counts,
+                volume = count_volume,
                 stacks_to_volume_options=options.stacks_to_volume,
                 z_resolution=brain.z_resolution,
                 uniform_sum = True,
@@ -208,24 +208,24 @@ def tv_recon_pipeline(options):
                 output_dir=output_dir
             ))
 
-            counts_volume_1 = MincAtom(os.path.join(output_dir, pipeline_name + "_stacked",
-                                                  brain.name + "_" + counts + "_stacked_1.mnc"),
+            count_volume_1 = MincAtom(os.path.join(output_dir, pipeline_name + "_stacked",
+                                                  brain.name + "_" + count + "_stacked_1.mnc"),
                                  output_sub_dir=os.path.join(output_dir, pipeline_name + "_stacked"))
-            counts_slices_to_volume_results = s.defer(stacks_to_volume(
-                slices=countss[0 : brain.z_section - brain.z_start],
-                volume=counts_volume_1,
+            count_slices_to_volume_results = s.defer(stacks_to_volume(
+                slices=counts[0 : brain.z_section - brain.z_start],
+                volume=count_volume_1,
                 stacks_to_volume_options=options.stacks_to_volume,
                 z_resolution=brain.z_resolution,
                 uniform_sum=True,
                 output_dir=output_dir
             ))
 
-            counts_volume_2 = MincAtom(os.path.join(output_dir, pipeline_name + "_stacked",
-                                                  brain.name + "_" + counts + "_stacked_2.mnc"),
+            count_volume_2 = MincAtom(os.path.join(output_dir, pipeline_name + "_stacked",
+                                                  brain.name + "_" + count + "_stacked_2.mnc"),
                                  output_sub_dir=os.path.join(output_dir, pipeline_name + "_stacked"))
-            counts_slices_to_volume_results = s.defer(stacks_to_volume(
-                slices=countss[brain.z_section - brain.z_start:brain.z_end-1],
-                volume=counts_volume_2,
+            count_slices_to_volume_results = s.defer(stacks_to_volume(
+                slices=counts[brain.z_section - brain.z_start:brain.z_end-1],
+                volume=count_volume_2,
                 stacks_to_volume_options=options.stacks_to_volume,
                 z_resolution=brain.z_resolution,
                 uniform_sum=True,
@@ -276,11 +276,11 @@ def tv_recon_pipeline(options):
                                  output_sub_dir=os.path.join(output_dir, pipeline_name + "_stacked"))
             s.defer(get_like(img=anatomical_volume_1, ref=anatomical_volume_2,
                              like=anatomical_volume_1_like, output_dir=output_dir))
-            counts_volume_1_like = MincAtom(os.path.join(output_dir, pipeline_name + "_stacked",
-                                                         brain.name + "_" + counts + "_stacked_like.mnc"),
+            count_volume_1_like = MincAtom(os.path.join(output_dir, pipeline_name + "_stacked",
+                                                         brain.name + "_" + count + "_stacked_like.mnc"),
                                  output_sub_dir=os.path.join(output_dir, pipeline_name + "_stacked"))
-            s.defer(get_like(img=counts_volume_1, ref=counts_volume_2,
-                             like=counts_volume_1_like, output_dir=output_dir))
+            s.defer(get_like(img=count_volume_1, ref=count_volume_2,
+                             like=count_volume_1_like, output_dir=output_dir))
 
             #transform the second section
             anatomical_volume_2_transformed = MincAtom(os.path.join(output_dir, pipeline_name + "_stacked",
@@ -291,21 +291,21 @@ def tv_recon_pipeline(options):
                                  like = anatomical_volume_1_like,
                                  resampled = anatomical_volume_2_transformed,
                                  output_dir = output_dir))
-            counts_volume_2_transformed = MincAtom(os.path.join(output_dir, pipeline_name + "_stacked",
-                                                    brain.name + "_" + counts + "_stacked_2_transformed.mnc"),
+            count_volume_2_transformed = MincAtom(os.path.join(output_dir, pipeline_name + "_stacked",
+                                                    brain.name + "_" + count + "_stacked_2_transformed.mnc"),
                                  output_sub_dir=os.path.join(output_dir, pipeline_name + "_stacked"))
-            s.defer(mincresample(img=counts_volume_2,
+            s.defer(mincresample(img=count_volume_2,
                                  xfm=xfm_concat,
-                                 like=counts_volume_1_like,
-                                 resampled=counts_volume_2_transformed,
+                                 like=count_volume_1_like,
+                                 resampled=count_volume_2_transformed,
                                  output_dir=output_dir))
 
             #add the first section's like with the transformed second section
             s.defer(mincmath(imgs = [anatomical_volume_1_like, anatomical_volume_2_transformed],
                              result = anatomical_volume,
                              output_dir=output_dir))
-            s.defer(mincmath(imgs=[counts_volume_1_like, counts_volume_2_transformed],
-                             result=counts_volume,
+            s.defer(mincmath(imgs=[count_volume_1_like, count_volume_2_transformed],
+                             result=count_volume,
                              output_dir=output_dir))
 
 #############################
@@ -320,13 +320,13 @@ def tv_recon_pipeline(options):
             autocropped = anatomical_volume_isotropic
         ))
 
-        counts_volume_isotropic = MincAtom(os.path.join(output_dir, pipeline_name + "_stacked",
-                                                 brain.name + "_" + counts + "_stacked_isotropic.mnc"),
+        count_volume_isotropic = MincAtom(os.path.join(output_dir, pipeline_name + "_stacked",
+                                                 brain.name + "_" + count + "_stacked_isotropic.mnc"),
                                  output_sub_dir=os.path.join(output_dir, pipeline_name + "_stacked"))
-        counts_volume_isotropic_results = s.defer(autocrop(
+        count_volume_isotropic_results = s.defer(autocrop(
             isostep = options.stacks_to_volume.plane_resolution,
-            img = counts_volume,
-            autocropped = counts_volume_isotropic,
+            img = count_volume,
+            autocropped = count_volume_isotropic,
             nearest_neighbour = True
         ))
 
@@ -349,30 +349,30 @@ def tv_recon_pipeline(options):
         all_anatomical_pad_results.append(anatomical_pad_results)
         reconstructed_mincs.append(anatomical_pad_results)
 
-        counts_padded = MincAtom(os.path.join(output_dir, pipeline_name + "_stacked",
-                                                        brain.name + "_" + counts + "_padded.mnc"))
-        counts_resampled = MincAtom(os.path.join(output_dir, pipeline_name + "_resampled",
-                                          brain.name + "_" + counts + "_resampled.mnc"))
+        count_padded = MincAtom(os.path.join(output_dir, pipeline_name + "_stacked",
+                                                        brain.name + "_" + count + "_padded.mnc"))
+        count_resampled = MincAtom(os.path.join(output_dir, pipeline_name + "_resampled",
+                                          brain.name + "_" + count + "_resampled.mnc"))
         atlas_resampled = MincAtom(os.path.join(output_dir, pipeline_name + "_resampled",
                                           "atlas_to_" + brain.name + "_resampled.mnc"))
-        counts_pad_results = s.defer(autocrop(
-            img = counts_volume_isotropic,
-            autocropped = counts_padded,
+        count_pad_results = s.defer(autocrop(
+            img = count_volume_isotropic,
+            autocropped = count_padded,
             x_pad = x_pad,
             y_pad = y_pad,
             z_pad = z_pad
         ))
-        all_counts_pad_results.append(counts_pad_results)
-        all_counts_resampled.append(counts_resampled)
+        all_count_pad_results.append(count_pad_results)
+        all_count_resampled.append(count_resampled)
         all_atlas_resampled.append(atlas_resampled)
-        reconstructed_mincs.append(counts_pad_results)
+        reconstructed_mincs.append(count_pad_results)
 
     csv_file = pd.read_csv(options.application.csv_file)
     reconstructed = pd.DataFrame({'brain_directory': [brain.brain_directory.path for brain in brains],
                                   'z_slices': [brain.z for brain in brains],
                                   'z_resolution': [brain.z_resolution for brain in brains],
                                   'anatomical_padded': [anatomical_padded.path for anatomical_padded in all_anatomical_pad_results],
-                                  'counts_padded': [counts_padded.path for counts_padded in all_counts_pad_results]})
+                                  'count_padded': [count_padded.path for count_padded in all_count_pad_results]})
 
     reconstructed = csv_file.merge(reconstructed)
     reconstructed.to_csv("reconstructed.csv", index=False)
@@ -385,11 +385,11 @@ def tv_recon_pipeline(options):
                                           montage_output=os.path.join(output_dir, pipeline_name + "_stacked",
                                                                       "%s_montage" % anatomical),
                                           message="%s_mincs" % anatomical))
-    s.defer(create_quality_control_images(imgs=all_counts_pad_results, montage_dir=output_dir,
+    s.defer(create_quality_control_images(imgs=all_count_pad_results, montage_dir=output_dir,
                                           montage_output=os.path.join(output_dir, pipeline_name + "_stacked",
-                                                                      "%s_montage" % counts),
+                                                                      "%s_montage" % count),
                                           auto_range=True,
-                                          message="%s_mincs" % counts))
+                                          message="%s_mincs" % count))
     return Result(stages=s, output=())
 
 tv_recon_application = mk_application(parsers = [TV_stitch_parser,

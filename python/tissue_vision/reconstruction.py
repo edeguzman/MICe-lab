@@ -231,19 +231,20 @@ def concat_xfm(xfms: List[XfmAtom],
                      log_file=os.path.join(output_dir, "join_sections.log"))
     return Result(stages=Stages([stage]), output=(outxfm))
 
-def mincresample(img: MincAtom,
-                 xfm: XfmAtom,
-                 like: MincAtom,
-                 resampled: MincAtom,
-                 output_dir: str,
-                 invert_xfm: bool = False):
-    stage = CmdStage(inputs=(xfm, like, img), outputs=(resampled,),
-                     cmd=['mincresample', '-clobber',
-                          '-invert_transformation' if invert_xfm else '',
-                          '-transform %s' % xfm.path,
-                          '-like %s' % like.path, img.path, resampled.path],
-                     log_file = os.path.join(output_dir, "join_sections.log"))
-    return Result(stages=Stages([stage]), output=resampled)
+# this was hacky
+# def mincresample(img: MincAtom,
+#                  xfm: XfmAtom,
+#                  like: MincAtom,
+#                  resampled: MincAtom,
+#                  output_dir: str,
+#                  invert_xfm: bool = False):
+#     stage = CmdStage(inputs=(xfm, like, img), outputs=(resampled,),
+#                      cmd=['mincresample', '-clobber',
+#                           '-invert_transformation' if invert_xfm else '',
+#                           '-transform %s' % xfm.path,
+#                           '-like %s' % like.path, img.path, resampled.path],
+#                      log_file = os.path.join(output_dir, "join_sections.log"))
+#     return Result(stages=Stages([stage]), output=resampled)
 
 def mincmath(imgs: List[MincAtom],
              result: MincAtom,
