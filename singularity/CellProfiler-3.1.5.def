@@ -5,13 +5,18 @@ MirrorURL: http://us.archive.ubuntu.com/ubuntu/
 %post
     apt-get -y update
     apt-get -y upgrade
-
+  
+    #add the add-apt-repository cmd and add universe and multiverse repositories
+    apt-get install -y software-properties-common 
+    add-apt-repository "deb http://us.archive.ubuntu.com/ubuntu/ bionic universe multiverse"
+    add-apt-repository "deb http://us.archive.ubuntu.com/ubuntu/ bionic-updates universe multiverse"
+    
     #locale
     apt-get install -y locales
     locale-gen en_US.UTF-8 en_US en_CA.UTF-8 en_CA
 
     #install base
-    apt-get -y install \
+    apt-get install -y \
         build-essential    \
         cython             \
         git                \
@@ -27,11 +32,10 @@ MirrorURL: http://us.archive.ubuntu.com/ubuntu/
         python-vigra       \
         python-wxgtk3.0    \
         python-zmq     \
-        vim     \
         wget
 
     #Gtk-Message: 14:41:54.536: Failed to load module "canberra-gtk-module"
-    apt-get install libcanberra-gtk3-module
+    apt-get install -y libcanberra-gtk3-module
 
     #CellProfiler setup.py does not cover everything
     pip install pytest
