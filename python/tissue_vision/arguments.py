@@ -114,7 +114,7 @@ def _mk_cellprofiler_parser():
     #                type=int,
     #                default=None,
     #                help="The one-based index of the last image set to process")
-    p.add_argument("--counts-name", dest="counts_name",
+    p.add_argument("--count-name", dest="count_name",
                    type=str,
                    default=None,
                    help="Specify the name of the counts images outputted by cellprofiler.")

@@ -23,7 +23,7 @@ from pydpiper.pipelines.MBM import mbm, mk_mbm_parser
 from tissue_vision.arguments import TV_stitch_parser, cellprofiler_parser, stacks_to_volume_parser, autocrop_parser
 
 from tissue_vision.reconstruction import TV_stitch_wrap, cellprofiler_wrap, stacks_to_volume, \
-    antsRegistration, get_like, tif_to_minc, get_through_plane_xfm, concat_xfm, mincresample, mincmath
+    antsRegistration, get_like, tif_to_minc, get_through_plane_xfm, concat_xfm, mincmath
 from tissue_vision.TV_stitch import get_params
 
 class Brain(object):
@@ -182,131 +182,131 @@ def tv_recon_pipeline(options):
                 output_dir=output_dir
                 ))
 
-        if brain.z_section:
-
-            anatomical_volume_1 = MincAtom(os.path.join(output_dir, pipeline_name + "_stacked",
-                                                  brain.name + "_" + anatomical + "_stacked_1.mnc"),
-                                 output_sub_dir=os.path.join(output_dir, pipeline_name + "_stacked"))
-            anatomical_slices_to_volume_results = s.defer(stacks_to_volume(
-                slices=anatomicals[0 : brain.z_section - brain.z_start],
-                volume=anatomical_volume_1,
-                stacks_to_volume_options=options.stacks_to_volume,
-                uniform_sum=False,
-                z_resolution=brain.z_resolution,
-                output_dir=output_dir
-            ))
-
-            anatomical_volume_2 = MincAtom(os.path.join(output_dir, pipeline_name + "_stacked",
-                                                  brain.name + "_" + anatomical + "_stacked_2.mnc"),
-                                 output_sub_dir=os.path.join(output_dir, pipeline_name + "_stacked"))
-            anatomical_slices_to_volume_results = s.defer(stacks_to_volume(
-                slices=anatomicals[brain.z_section - brain.z_start:brain.z_end-1],
-                volume=anatomical_volume_2,
-                stacks_to_volume_options=options.stacks_to_volume,
-                uniform_sum=False,
-                z_resolution=brain.z_resolution,
-                output_dir=output_dir
-            ))
-
-            count_volume_1 = MincAtom(os.path.join(output_dir, pipeline_name + "_stacked",
-                                                  brain.name + "_" + count + "_stacked_1.mnc"),
-                                 output_sub_dir=os.path.join(output_dir, pipeline_name + "_stacked"))
-            count_slices_to_volume_results = s.defer(stacks_to_volume(
-                slices=counts[0 : brain.z_section - brain.z_start],
-                volume=count_volume_1,
-                stacks_to_volume_options=options.stacks_to_volume,
-                z_resolution=brain.z_resolution,
-                uniform_sum=True,
-                output_dir=output_dir
-            ))
-
-            count_volume_2 = MincAtom(os.path.join(output_dir, pipeline_name + "_stacked",
-                                                  brain.name + "_" + count + "_stacked_2.mnc"),
-                                 output_sub_dir=os.path.join(output_dir, pipeline_name + "_stacked"))
-            count_slices_to_volume_results = s.defer(stacks_to_volume(
-                slices=counts[brain.z_section - brain.z_start:brain.z_end-1],
-                volume=count_volume_2,
-                stacks_to_volume_options=options.stacks_to_volume,
-                z_resolution=brain.z_resolution,
-                uniform_sum=True,
-                output_dir=output_dir
-            ))
-
-            #create minc slices for registration
-            fixed_minc = s.defer(tif_to_minc(
-                tif=anatomicals[brain.z_section - brain.z_start - 1],
-                volume=MincAtom(anatomicals[brain.z_section - brain.z_start - 1].path.replace("tiff","mnc"),
-                                 output_sub_dir=os.path.join(output_dir, pipeline_name + "_stacked")),
-                stacks_to_volume_options=options.stacks_to_volume,
-                z_resolution=brain.z_resolution,
-                output_dir=output_dir))
-            moving_minc = s.defer(tif_to_minc(
-                tif=anatomicals[brain.z_section - brain.z_start],
-                volume=MincAtom(anatomicals[brain.z_section - brain.z_start].path.replace("tiff","mnc"),
-                                 output_sub_dir=os.path.join(output_dir, pipeline_name + "_stacked")),
-                stacks_to_volume_options=options.stacks_to_volume,
-                z_resolution=brain.z_resolution,
-                output_dir=output_dir))
-
-            #create in-plane transform
-            in_plane_transform = FileAtom(os.path.join(output_dir, pipeline_name + "_stacked",
-                                                  brain.name + "0_GenericAffine.xfm"))
-            s.defer(antsRegistration(fixed = fixed_minc,
-                                     moving = moving_minc,
-                                     transform = in_plane_transform,
-                                     output_dir=output_dir))
-
-            #create through-plane transform
-            through_plane_xfm = FileAtom(os.path.join(output_dir, pipeline_name + "_stacked",
-                                                  brain.name + "_through_plane.xfm"))
-            s.defer(get_through_plane_xfm(img = anatomical_volume_1,
-                                          xfm = through_plane_xfm,
-                                          output_dir = output_dir))
-
-            #concatenate the transforms
-            xfm_concat = FileAtom(os.path.join(output_dir, pipeline_name + "_stacked",
-                                                  brain.name + "_concat.xfm"))
-            s.defer(concat_xfm(xfms=[in_plane_transform, through_plane_xfm],
-                               outxfm = xfm_concat,
-                               output_dir = output_dir))
-
-            # create like file from first section
-            anatomical_volume_1_like = MincAtom(os.path.join(output_dir, pipeline_name + "_stacked",
-                                                         brain.name + "_" + anatomical + "_stacked_like.mnc"),
-                                 output_sub_dir=os.path.join(output_dir, pipeline_name + "_stacked"))
-            s.defer(get_like(img=anatomical_volume_1, ref=anatomical_volume_2,
-                             like=anatomical_volume_1_like, output_dir=output_dir))
-            count_volume_1_like = MincAtom(os.path.join(output_dir, pipeline_name + "_stacked",
-                                                         brain.name + "_" + count + "_stacked_like.mnc"),
-                                 output_sub_dir=os.path.join(output_dir, pipeline_name + "_stacked"))
-            s.defer(get_like(img=count_volume_1, ref=count_volume_2,
-                             like=count_volume_1_like, output_dir=output_dir))
-
-            #transform the second section
-            anatomical_volume_2_transformed = MincAtom(os.path.join(output_dir, pipeline_name + "_stacked",
-                                                brain.name + "_" + anatomical + "_stacked_2_transformed.mnc"),
-                                 output_sub_dir=os.path.join(output_dir, pipeline_name + "_stacked"))
-            s.defer(mincresample(img = anatomical_volume_2,
-                                 xfm = xfm_concat,
-                                 like = anatomical_volume_1_like,
-                                 resampled = anatomical_volume_2_transformed,
-                                 output_dir = output_dir))
-            count_volume_2_transformed = MincAtom(os.path.join(output_dir, pipeline_name + "_stacked",
-                                                    brain.name + "_" + count + "_stacked_2_transformed.mnc"),
-                                 output_sub_dir=os.path.join(output_dir, pipeline_name + "_stacked"))
-            s.defer(mincresample(img=count_volume_2,
-                                 xfm=xfm_concat,
-                                 like=count_volume_1_like,
-                                 resampled=count_volume_2_transformed,
-                                 output_dir=output_dir))
-
-            #add the first section's like with the transformed second section
-            s.defer(mincmath(imgs = [anatomical_volume_1_like, anatomical_volume_2_transformed],
-                             result = anatomical_volume,
-                             output_dir=output_dir))
-            s.defer(mincmath(imgs=[count_volume_1_like, count_volume_2_transformed],
-                             result=count_volume,
-                             output_dir=output_dir))
+        # if brain.z_section:
+        #
+        #     anatomical_volume_1 = MincAtom(os.path.join(output_dir, pipeline_name + "_stacked",
+        #                                           brain.name + "_" + anatomical + "_stacked_1.mnc"),
+        #                          output_sub_dir=os.path.join(output_dir, pipeline_name + "_stacked"))
+        #     anatomical_slices_to_volume_results = s.defer(stacks_to_volume(
+        #         slices=anatomicals[0 : brain.z_section - brain.z_start],
+        #         volume=anatomical_volume_1,
+        #         stacks_to_volume_options=options.stacks_to_volume,
+        #         uniform_sum=False,
+        #         z_resolution=brain.z_resolution,
+        #         output_dir=output_dir
+        #     ))
+        #
+        #     anatomical_volume_2 = MincAtom(os.path.join(output_dir, pipeline_name + "_stacked",
+        #                                           brain.name + "_" + anatomical + "_stacked_2.mnc"),
+        #                          output_sub_dir=os.path.join(output_dir, pipeline_name + "_stacked"))
+        #     anatomical_slices_to_volume_results = s.defer(stacks_to_volume(
+        #         slices=anatomicals[brain.z_section - brain.z_start:brain.z_end-1],
+        #         volume=anatomical_volume_2,
+        #         stacks_to_volume_options=options.stacks_to_volume,
+        #         uniform_sum=False,
+        #         z_resolution=brain.z_resolution,
+        #         output_dir=output_dir
+        #     ))
+        #
+        #     count_volume_1 = MincAtom(os.path.join(output_dir, pipeline_name + "_stacked",
+        #                                           brain.name + "_" + count + "_stacked_1.mnc"),
+        #                          output_sub_dir=os.path.join(output_dir, pipeline_name + "_stacked"))
+        #     count_slices_to_volume_results = s.defer(stacks_to_volume(
+        #         slices=counts[0 : brain.z_section - brain.z_start],
+        #         volume=count_volume_1,
+        #         stacks_to_volume_options=options.stacks_to_volume,
+        #         z_resolution=brain.z_resolution,
+        #         uniform_sum=True,
+        #         output_dir=output_dir
+        #     ))
+        #
+        #     count_volume_2 = MincAtom(os.path.join(output_dir, pipeline_name + "_stacked",
+        #                                           brain.name + "_" + count + "_stacked_2.mnc"),
+        #                          output_sub_dir=os.path.join(output_dir, pipeline_name + "_stacked"))
+        #     count_slices_to_volume_results = s.defer(stacks_to_volume(
+        #         slices=counts[brain.z_section - brain.z_start:brain.z_end-1],
+        #         volume=count_volume_2,
+        #         stacks_to_volume_options=options.stacks_to_volume,
+        #         z_resolution=brain.z_resolution,
+        #         uniform_sum=True,
+        #         output_dir=output_dir
+        #     ))
+        #
+        #     #create minc slices for registration
+        #     fixed_minc = s.defer(tif_to_minc(
+        #         tif=anatomicals[brain.z_section - brain.z_start - 1],
+        #         volume=MincAtom(anatomicals[brain.z_section - brain.z_start - 1].path.replace("tiff","mnc"),
+        #                          output_sub_dir=os.path.join(output_dir, pipeline_name + "_stacked")),
+        #         stacks_to_volume_options=options.stacks_to_volume,
+        #         z_resolution=brain.z_resolution,
+        #         output_dir=output_dir))
+        #     moving_minc = s.defer(tif_to_minc(
+        #         tif=anatomicals[brain.z_section - brain.z_start],
+        #         volume=MincAtom(anatomicals[brain.z_section - brain.z_start].path.replace("tiff","mnc"),
+        #                          output_sub_dir=os.path.join(output_dir, pipeline_name + "_stacked")),
+        #         stacks_to_volume_options=options.stacks_to_volume,
+        #         z_resolution=brain.z_resolution,
+        #         output_dir=output_dir))
+        #
+        #     #create in-plane transform
+        #     in_plane_transform = FileAtom(os.path.join(output_dir, pipeline_name + "_stacked",
+        #                                           brain.name + "0_GenericAffine.xfm"))
+        #     s.defer(antsRegistration(fixed = fixed_minc,
+        #                              moving = moving_minc,
+        #                              transform = in_plane_transform,
+        #                              output_dir=output_dir))
+        #
+        #     #create through-plane transform
+        #     through_plane_xfm = FileAtom(os.path.join(output_dir, pipeline_name + "_stacked",
+        #                                           brain.name + "_through_plane.xfm"))
+        #     s.defer(get_through_plane_xfm(img = anatomical_volume_1,
+        #                                   xfm = through_plane_xfm,
+        #                                   output_dir = output_dir))
+        #
+        #     #concatenate the transforms
+        #     xfm_concat = FileAtom(os.path.join(output_dir, pipeline_name + "_stacked",
+        #                                           brain.name + "_concat.xfm"))
+        #     s.defer(concat_xfm(xfms=[in_plane_transform, through_plane_xfm],
+        #                        outxfm = xfm_concat,
+        #                        output_dir = output_dir))
+        #
+        #     # create like file from first section
+        #     anatomical_volume_1_like = MincAtom(os.path.join(output_dir, pipeline_name + "_stacked",
+        #                                                  brain.name + "_" + anatomical + "_stacked_like.mnc"),
+        #                          output_sub_dir=os.path.join(output_dir, pipeline_name + "_stacked"))
+        #     s.defer(get_like(img=anatomical_volume_1, ref=anatomical_volume_2,
+        #                      like=anatomical_volume_1_like, output_dir=output_dir))
+        #     count_volume_1_like = MincAtom(os.path.join(output_dir, pipeline_name + "_stacked",
+        #                                                  brain.name + "_" + count + "_stacked_like.mnc"),
+        #                          output_sub_dir=os.path.join(output_dir, pipeline_name + "_stacked"))
+        #     s.defer(get_like(img=count_volume_1, ref=count_volume_2,
+        #                      like=count_volume_1_like, output_dir=output_dir))
+        #
+        #     #transform the second section
+        #     anatomical_volume_2_transformed = MincAtom(os.path.join(output_dir, pipeline_name + "_stacked",
+        #                                         brain.name + "_" + anatomical + "_stacked_2_transformed.mnc"),
+        #                          output_sub_dir=os.path.join(output_dir, pipeline_name + "_stacked"))
+        #     s.defer(mincresample(img = anatomical_volume_2,
+        #                          xfm = xfm_concat,
+        #                          like = anatomical_volume_1_like,
+        #                          resampled = anatomical_volume_2_transformed,
+        #                          output_dir = output_dir))
+        #     count_volume_2_transformed = MincAtom(os.path.join(output_dir, pipeline_name + "_stacked",
+        #                                             brain.name + "_" + count + "_stacked_2_transformed.mnc"),
+        #                          output_sub_dir=os.path.join(output_dir, pipeline_name + "_stacked"))
+        #     s.defer(mincresample(img=count_volume_2,
+        #                          xfm=xfm_concat,
+        #                          like=count_volume_1_like,
+        #                          resampled=count_volume_2_transformed,
+        #                          output_dir=output_dir))
+        #
+        #     #add the first section's like with the transformed second section
+        #     s.defer(mincmath(imgs = [anatomical_volume_1_like, anatomical_volume_2_transformed],
+        #                      result = anatomical_volume,
+        #                      output_dir=output_dir))
+        #     s.defer(mincmath(imgs=[count_volume_1_like, count_volume_2_transformed],
+        #                      result=count_volume,
+        #                      output_dir=output_dir))
 
 #############################
 # Step 4: Run autocrop to resample to isotropic
