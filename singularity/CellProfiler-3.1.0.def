@@ -37,13 +37,6 @@ MirrorURL: http://us.archive.ubuntu.com/ubuntu/
     #Gtk-Message: 14:41:54.536: Failed to load module "canberra-gtk-module"
    # apt-get install -y libcanberra-gtk3-module
 
-    #CellProfiler setup.py does not cover everything
-   # pip install pytest
-   # pip install matplotlib==2.2.2
-   # pip install pillow
-   # pip install python-dateutil
-   # pip install sklearn
-
     #install CellProfiler
     wget https://github.com/CellProfiler/CellProfiler/archive/v3.1.0.tar.gz && \
     pip install v3.1.0.tar.gz --no-cache-dir && \
@@ -55,4 +48,4 @@ MirrorURL: http://us.archive.ubuntu.com/ubuntu/
     Version 1.0
 
 %help
-    Base image for CellProfiler 3.0.0. Contains only standard and 3rd party packages.
+    Base image for CellProfiler 3.1.0. Contains only standard and 3rd party packages.
