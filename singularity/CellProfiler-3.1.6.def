@@ -42,17 +42,17 @@ MirrorURL: http://us.archive.ubuntu.com/ubuntu/
     pip install matplotlib==2.2.2
     pip install pillow
     pip install python-dateutil
-    pip install sklearn
+    pip install scikit-image==0.13.1
 
     #install CellProfiler
-    wget https://github.com/CellProfiler/CellProfiler/archive/v3.1.5.tar.gz && \
-    pip install v3.1.5.tar.gz --no-cache-dir && \
-    rm -rf v3.1.5.tar.gz
+    wget https://github.com/CellProfiler/CellProfiler/archive/v3.1.6.tar.gz && \
+    pip install v3.1.6.tar.gz --no-cache-dir && \
+    rm -rf v3.1.6.tar.gz
 
 %labels
     Maintainer Nick Wang
     AUTHOR nick.wang@sickkids.ca
-    Version 1.0
+    Version 1.1
 
 %help
-    Base image for CellProfiler 3.1.5. Contains only standard and 3rd party packages.
+    Base image for CellProfiler 3.1.6. Contains only standard and 3rd party packages.
