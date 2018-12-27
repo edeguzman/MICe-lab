@@ -74,8 +74,7 @@ def cellprofiler_wrap(stitched: List[FileAtom],
                      cmd=['cellprofiler.sh', '-c', '-r',
                           '-p %s' % cellprofiler_pipeline.path,
                           '-i %s' % stitched[0].dir,
-                          '-o %s' % batch_data.dir],
-                     log_file = os.path.join(output_dir,"cellprofiler.log"))
+                          '-o %s' % batch_data.dir])
     s.add(stage)
     def set_memory(stage: CmdStage, mem_cfg: NamedTuple, z):
         img_size = os.stat(stitched[0].path).st_size
@@ -87,6 +86,7 @@ def cellprofiler_wrap(stitched: List[FileAtom],
                               '-p %s' % batch_data.path,
                               '-f %s' % z,
                               '-l %s' % z],
+                         #TODO make this automatic
                          log_file=os.path.join(output_dir, "cellprofiler.log"))
 
 
