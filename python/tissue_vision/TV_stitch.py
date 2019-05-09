@@ -63,6 +63,27 @@ class Tile(object):
                 self.posarray[0],self.posarray[1],self.posarray[2],self.pixoffsetarray[0],self.pixoffsetarray[1],self.pixoffsetarray[2])
 
 #---------------------------------------------------------------------------
+def IM_intensity_average(imgfile):
+    cmdstr = "identify -verbose %s | grep mean "%imgfile
+    cmdout = run_subprocess(cmdstr)
+    Imean = float(cmdout.split()[1])
+    return Imean
+
+def intensity_normalize_Zstack(inputfilelist,outputfilelist):
+    meanlist=[]
+    for cfile in inputfilelist:
+        meanlist.append( IM_intensity_average(cfile) )
+    meanarray = array(meanlist)
+    if (len(meanarray)>3): #HERE: fit to exponential ???
+        A = ones( (len(meanarray),2) ); A[:,0]=arange(len(meanarray))
+        x,resids,rank,s = lstsq(A,log(meanarray))
+        scalearray = exp(-1*x[0]*arange(len(meanarray)))
+    else:
+        scalearray = meanarray[0]/meanarray
+    for j in range(len(scalearray)):
+        cmdstr = 'convert %s -evaluate multiply %f %s'%(inputfilelist[j],scalearray[j],outputfilelist[j])
+        cmdout = run_subprocess(cmdstr)
+    return 0
 
 def gen_tempfile(descrip_str,ftype_str):
     if not (os.path.exists(TEMPDIRECTORY)): os.mkdir(TEMPDIRECTORY)
