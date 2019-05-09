@@ -47,14 +47,19 @@ def tissue_vision_pipeline(options):
     output_dir = options.application.output_directory
     pipeline_name = options.application.pipeline_name
 
+    csv = original_csv = get_imgs(options.application)
+    # check_MINC_input_files([img.path for img in imgs])
+
     s = Stages()
 
+    s.defer(create_quality_control_images(imgs=csv['anatomy_MincAtom'].tolist(), montage_dir=output_dir,
+                                          montage_output=os.path.join(output_dir, pipeline_name + "_resampled",
+                                                                      "input_montage"),
+                                          auto_range=True,
+                                          message="input_mincs"))
 #############################
 # Step 1: Run MBM.py to create a consensus average
 #############################
-    csv = original_csv = get_imgs(options.application)
-    #check_MINC_input_files([img.path for img in imgs])
-
     mbm_result = s.defer(mbm(imgs=csv['anatomy_MincAtom'].tolist(), options=options,
                              prefix=options.application.pipeline_name,
                              output_dir=output_dir,
