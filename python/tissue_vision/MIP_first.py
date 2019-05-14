@@ -57,10 +57,10 @@ output_slice_mosaics = [output_slice_dir/slice_mosaic.name for
 N = mrows * mcolumns
 mip = [[output_slice_dirs[i]/tiles[i][j].name for j in range(N)] for i in range(sections)]
 
-(pd.read_table(mosaic.as_posix(), header=None, squeeze=True)
-     .str.replace("Zscan:1", "Zscan:0")
-     .str.replace("layers:5", "layers:1")
-     .to_csv(output_dir/name/mosaic.name, header=False, index=False))
+(output_dir/name).mkdir(parents=True, exist_ok=True)
+pd.read_table(mosaic.as_posix(), header=None, squeeze=True)\
+    .str.replace("Zscan:1", "Zscan:0").str.replace("layers:5", "layers:1")\
+    .to_csv(output_dir/name/mosaic.name, header=False, index=False)
 
 for i in range(sections):
     print("Currently working on the tiles in " + output_slice_dirs[i].as_posix() + ".")
