@@ -17,7 +17,9 @@ setup(name="MICe-lab",
         'scipy',
         'snakemake',
         'matplotlib',
-        'Pillow'
+        'Pillow',
+        'fastai',
+        'opencv-python'
       ],
       dependency_links=['https://github.com/opencv/opencv/archive/3.1.0.tar.gz',
                         'https://github.com/Mouse-Imaging-Centre/pydpiper',
@@ -32,5 +34,6 @@ setup(name="MICe-lab",
                'tissue_vision/TV_pipeline.py',
                'tissue_vision/TV_recon.py',
                'tissue_vision/TV_stitch.py',
+               'tissue_vision/MIP_first.py',
                ],
       )
